@@ -35,7 +35,352 @@
     #header {
       position: fixed; top: 0; left: 0; right: 0;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 28px; background: #1a1a1e90; backdrop-filter: blur(8px);
+      padding: 14px 28px; background: #1a1a1e90; backdrop-filter: blur(8px);<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מעבדה דיגיטלית - איתות רכבתי V2</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap');
+    
+    body {
+      background: #111111;
+      font-family: 'Heebo', sans-serif;
+      color: #e8e2d8;
+      min-height: 100vh;
+      margin: 0;
+      overflow: hidden; /* מונע גלילה מיותרת */
+      user-select: none;
+    }
+
+    .grid-bg {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image: 
+        linear-gradient(to right, #222 1px, transparent 1px),
+        linear-gradient(to bottom, #222 1px, transparent 1px);
+      background-size: 20px 20px;
+      z-index: -1;
+    }
+
+    #header {
+      position: fixed; top: 0; left: 0; right: 0; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; background: #1a1a1e90; backdrop-filter: blur(8px);
+      border-bottom: 0.5px solid #ffffff15; z-index: 100;
+      font-family: 'DM Mono', monospace;
+    }
+    #logo { font-size: 12px; font-weight: 700; color: #4ade80; text-transform: uppercase; }
+    #step-counter { font-size: 12px; color: #7a7870; }
+
+    /* התיקון הקריטי: עיגון מוחלט של אזור השרטוט בין ההאדר לפאנל התחתון */
+    .canvas-wrap {
+      position: absolute;
+      top: 60px; /* מתחיל בדיוק מתחת להאדר */
+      bottom: 110px; /* מסתיים בדיוק מעל הפאנל התחתון */
+      left: 0;
+      right: 0;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+    
+    /* מתיחת ה-SVG בצורה חכמה ששומרת על פרופורציות */
+    svg { 
+      width: 100%; 
+      height: 100%; 
+      max-width: 1100px; 
+    }
+
+    /* פאנל שליטה תחתון */
+    #controls-panel {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      width: 95%; max-width: 900px;
+      display: flex; flex-direction: row; 
+      gap: 15px; 
+      background: #1a1a1ee0; border: 1px solid #333; border-radius: 8px; 
+      padding: 15px 25px; backdrop-filter: blur(10px); z-index: 100; align-items: center;
+    }
+    
+    .control-btn {
+      background: #2a2a2e; border: 1px solid #444; color: #fff;
+      padding: 8px 16px; border-radius: 6px; font-family: 'Heebo'; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .control-btn:hover { background: #4ade80; color: #111; border-color: #4ade80; }
+    .control-btn:active { transform: scale(0.95); }
+    
+    #caption-text { flex-grow: 1; text-align: center; }
+    #caption-title { font-size: 15px; font-weight: 700; color: #4ade80; margin-bottom: 4px; }
+    #caption-body { font-size: 13px; color: #ccc; }
+
+    /* התאמה למובייל */
+    @media (max-width: 768px) {
+      .canvas-wrap { bottom: 160px; } /* משאיר יותר מקום לפאנל התחתון בנייד */
+      #controls-panel { bottom: 15px; padding: 12px 15px; flex-wrap: wrap; gap: 10px; }
+      #caption-text { order: -1; width: 100%; margin-bottom: 5px; }
+      .control-btn { flex: 1; padding: 10px 5px; font-size: 12px; text-align: center; }
+      #logo, #step-counter { font-size: 9px; }
+    }
+
+    /* קווי חשמל ואנימציות */
+    .wire { stroke: #333; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.4s; }
+    .wire-animate { stroke-dasharray: 1500; stroke-dashoffset: 1500; transition: stroke-dashoffset 0.8s ease-in-out, stroke 0.4s; }
+    .wire-animate.active { stroke-dashoffset: 0; stroke: #4ade80; filter: drop-shadow(0 0 5px #4ade80); }
+    
+    .wire-speed { stroke-dasharray: 1000; stroke-dashoffset: 1000; transition: stroke-dashoffset 0.8s ease-in-out, stroke 0.4s; }
+    .wire-speed.active { stroke-dashoffset: 0; stroke: #fbbf24; filter: drop-shadow(0 0 5px #fbbf24); }
+
+    .wire-warning { stroke-dasharray: 1000; stroke-dashoffset: 1000; transition: stroke-dashoffset 0.8s ease-in-out, stroke 0.4s; }
+    .wire-warning.active { stroke-dashoffset: 0; stroke: #ef4444; filter: drop-shadow(0 0 5px #ef4444); }
+
+    .wire-series { stroke-dasharray: 500; stroke-dashoffset: 500; transition: stroke-dashoffset 1s linear; stroke: #333; }
+    .wire-series.active { stroke-dashoffset: 0; stroke: #f8fafc; }
+
+    /* קופסאות */
+    .box { fill: #1e1e24; stroke: #444; stroke-width: 2; rx: 6; transition: all 0.3s; }
+    .box-main.active { stroke: #4ade80; fill: #223322; }
+    .box-speed.active { stroke: #fbbf24; fill: #332d19; }
+    .box-warn.active { stroke: #ef4444; fill: #331919; }
+    .box-text { font-size: 13px; fill: #aaa; text-anchor: middle; dominant-baseline: middle; font-weight: 700; }
+    .box.active ~ .box-text { fill: #fff; }
+
+    .interlocking-box { fill: none; stroke: #555; stroke-width: 1.5; stroke-dasharray: 8 4; rx: 4; }
+    .interlocking-text { fill: #fff; font-size: 16px; font-family: 'DM Mono'; }
+
+    /* פנסי סימנור ועמוד */
+    .signal-mast { fill: #151515; stroke: #333; stroke-width: 2; }
+    .signal-bg { fill: #0a0a0a; stroke: #222; stroke-width: 1; rx: 4; }
+    .lens { fill: #111; stroke: #000; stroke-width: 2; transition: fill 0.3s, filter 0.3s; }
+    
+    .lens.red.active { fill: #ef4444; filter: drop-shadow(0 0 15px #ef4444); }
+    .lens.yellow.active { fill: #fbbf24; filter: drop-shadow(0 0 15px #fbbf24); }
+    .lens.green.active { fill: #22c55e; filter: drop-shadow(0 0 15px #22c55e); }
+    .lens.white.active { fill: #ffffff; filter: drop-shadow(0 0 10px #ffffff); }
+
+    .speed-digit { font-size: 28px; font-weight: 700; fill: #111; text-anchor: middle; dominant-baseline: middle; transition: all 0.3s; }
+    .speed-digit.active { fill: #ffffff; filter: drop-shadow(0 0 12px #ffffff); }
+
+    .gear-icon { fill: #aaa; transition: all 0.5s; transform-origin: 155px 440px; }
+    .box-warn.active ~ .gear-icon { fill: #ef4444; transform: rotate(90deg); filter: drop-shadow(0 0 5px #ef4444); }
+  </style>
+</head>
+<body>
+
+  <div class="grid-bg"></div>
+
+<div id="header">
+  <a href="index.html" style="text-decoration: none; color: #4ade80; font-weight: bold; font-size: 14px;">← חזרה למעבדות</a>
+  <div id="logo">LAB / איתות רכבתי</div>
+  <div id="step-counter">שלב 0 / 3</div>
+</div>
+
+  <div class="canvas-wrap">
+    <svg viewBox="0 0 1100 700" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      
+      <rect class="interlocking-box" x="80" y="80" width="400" height="460" />
+      <text class="interlocking-text" x="95" y="520">interlocking</text>
+
+      <rect class="signal-mast" x="886" y="50" width="8" height="600" rx="4" />
+
+      <path class="wire wire-warning" id="wire-calib-warn" d="M 195 410 L 195 380" />
+      <path class="wire wire-animate" id="wire-warn-db" d="M 270 350 L 330 350" />
+      <path class="wire wire-animate" id="wire-speed-db" d="M 270 250 L 330 250" />
+      <path class="wire wire-animate" id="wire-main-db" d="M 270 150 L 330 150" />
+      
+      <path class="wire wire-animate" id="wire-db-db" d="M 370 410 L 370 580 L 510 580" />
+      <path class="wire wire-animate" id="wire-db-insert" d="M 590 580 L 890 580 L 890 500" />
+
+      <path class="wire wire-animate" id="wire-mast-main" d="M 890 350 L 890 270" />
+      <path class="wire wire-speed" id="wire-mast-speed" d="M 875 350 L 875 120" />
+      <path class="wire wire-warning" id="wire-mast-warn" d="M 865 350 L 865 300" />
+      
+      <path class="wire wire-series" id="wire-series" d="M 890 350 L 915 350 L 905 315 L 890 335 L 875 315 L 890 350" />
+
+      <g id="group-main">
+        <rect class="box box-main" id="box-main" x="120" y="120" width="150" height="60" />
+        <text class="box-text" x="195" y="150">גרופ ראשי</text>
+      </g>
+
+      <g id="group-speed">
+        <rect class="box box-speed" id="box-speed" x="120" y="220" width="150" height="60" />
+        <text class="box-text" x="195" y="250">גרופ מהירות</text>
+      </g>
+
+      <g id="group-warn">
+        <rect class="box box-main" id="box-warn" x="120" y="320" width="150" height="60" />
+        <text class="box-text" x="195" y="350">גרופ אזהרה</text>
+      </g>
+
+      <g id="calib-warn">
+        <rect class="box box-warn" id="box-calib" x="120" y="410" width="150" height="60" />
+        <text class="box-text" x="205" y="440">פוטנציומטר אזהרה</text>
+        <path class="gear-icon" d="M155,432 c-4.4,0-8,3.6-8,8 s3.6,8,8,8 s8-3.6,8-8 S159.4,432,155,432z M165.5,438.5 l2.5-1.5 l-1.5-2.5 l-2.5,1.5 c-0.8-1.2-1.9-2.2-3.2-3 l1.5-2.5 l-2.5-1.5 l-1.5,2.5 c-1.4-0.3-2.9-0.3-4.3,0 l-1.5-2.5 l-2.5,1.5 l1.5,2.5 c-1.3,0.8-2.4,1.8-3.2,3 l-2.5-1.5 l-1.5,2.5 l2.5,1.5 c-0.3,1.4-0.3,2.9,0,4.3 l-2.5,1.5 l1.5,2.5 l2.5-1.5 c0.8,1.3,1.9,2.4,3.2,3.2 l-1.5,2.5 l2.5,1.5 l1.5-2.5 c1.4,0.3,2.9,0.3,4.3,0 l1.5,2.5 l2.5-1.5 l-1.5-2.5 c1.3-0.8,2.4-1.9,3.2-3.2 l2.5,1.5 l1.5-2.5 l-2.5-1.5 C165.8,441.4,165.8,439.9,165.5,438.5z" />
+      </g>
+
+      <g id="db-top" transform="translate(330, 110)">
+        <rect class="box box-main" id="box-db-top" x="0" y="0" width="80" height="300" />
+        <text class="box-text" transform="rotate(90, 40, 150)" x="40" y="150">DB BOARD</text>
+      </g>
+
+      <g id="db-bottom" transform="translate(510, 480)">
+        <rect class="box box-main" id="box-db-bot" x="0" y="0" width="80" height="200" />
+        <text class="box-text" transform="rotate(90, 40, 100)" x="40" y="100">DB BOARD</text>
+      </g>
+
+      <g id="insert-box" transform="translate(860, 350)">
+        <rect class="box box-main" id="box-insert" x="0" y="0" width="60" height="150" />
+        <text class="box-text" transform="rotate(90, 30, 75)" x="30" y="75" style="font-size: 12px; font-family: 'DM Mono';">INSERT BOX</text>
+      </g>
+
+      <rect class="signal-bg" x="865" y="70" width="50" height="60" />
+      <text class="speed-digit" id="light-speed" x="890" y="102" font-family="'DM Mono'">3</text>
+
+      <rect class="signal-bg" x="865" y="140" width="50" height="125" />
+      <circle class="lens red active" id="light-red" cx="890" cy="165" r="14" />
+      <circle class="lens yellow" id="light-yellow" cx="890" cy="202" r="14" />
+      <circle class="lens green" id="light-green" cx="890" cy="240" r="14" />
+
+      <rect class="signal-bg" x="865" y="275" width="50" height="60" />
+      <circle class="lens white" id="warn-left" cx="877" cy="295" r="7" />
+      <circle class="lens white" id="warn-right" cx="903" cy="295" r="7" />
+      <circle class="lens white" id="warn-bottom" cx="890" cy="315" r="7" />
+
+    </svg>
+  </div>
+
+  <div id="controls-panel">
+    <button class="control-btn" onclick="prevStep()">הקודם ◀</button>
+    <button class="control-btn" onclick="resetSystem()" style="background: #333;">איפוס ↺</button>
+    
+    <div id="caption-text">
+      <div id="caption-title">מצב 0: סימנור אדום</div>
+      <div id="caption-body">מצב המתנה. המערכת סגורה וממתינה לפקודה.</div>
+    </div>
+    
+    <button class="control-btn" onclick="nextStep()">הבא ▶</button>
+  </div>
+
+  <script>
+    let currentStep = 0;
+    const totalSteps = 3;
+    let timeouts = [];
+
+    function clearAllTimeouts() {
+      timeouts.forEach(t => clearTimeout(t));
+      timeouts = [];
+    }
+
+    function deactivateAll() {
+      clearAllTimeouts();
+      document.querySelectorAll('.active').forEach(el => el.classList.remove('active'));
+      document.getElementById('light-red').classList.add('active');
+    }
+
+    function updateState() {
+      deactivateAll();
+      document.getElementById('step-counter').innerText = `שלב ${currentStep} / ${totalSteps}`;
+
+      if (currentStep === 0) {
+        document.getElementById('caption-title').innerText = "מצב 0: סימנור אדום";
+        document.getElementById('caption-body').innerText = "מצב המתנה. הדרך חסומה.";
+      }
+      else if (currentStep === 1) {
+        document.getElementById('caption-title').innerText = "מצב 1: אזהרה פעילה (באדום בלבד)";
+        document.getElementById('caption-body').innerText = "כאשר יש תקלה שאינה מאפשרת לפתוח את הראשי, ובהתאם לתנאי סף לפתיחת אזהרה הרכבת תעבור בסימנור אזהרה במהירות עד 30 קמש.";
+        
+        document.getElementById('box-calib').classList.add('active');
+        document.getElementById('wire-calib-warn').classList.add('active');
+        
+        timeouts.push(setTimeout(() => document.getElementById('box-warn').classList.add('active'), 400));
+        timeouts.push(setTimeout(() => document.getElementById('wire-warn-db').classList.add('active'), 800));
+        timeouts.push(setTimeout(() => document.getElementById('box-db-top').classList.add('active'), 1200));
+        timeouts.push(setTimeout(() => document.getElementById('wire-db-db').classList.add('active'), 1500));
+        timeouts.push(setTimeout(() => document.getElementById('box-db-bot').classList.add('active'), 1800));
+        timeouts.push(setTimeout(() => document.getElementById('wire-db-insert').classList.add('active'), 2100));
+        timeouts.push(setTimeout(() => document.getElementById('box-insert').classList.add('active'), 2400));
+        
+        timeouts.push(setTimeout(() => document.getElementById('wire-mast-warn').classList.add('active'), 2800));
+        timeouts.push(setTimeout(() => document.getElementById('wire-series').classList.add('active'), 2800));
+        timeouts.push(setTimeout(() => document.getElementById('warn-right').classList.add('active'), 3000));
+        timeouts.push(setTimeout(() => document.getElementById('warn-bottom').classList.add('active'), 3300));
+        timeouts.push(setTimeout(() => document.getElementById('warn-left').classList.add('active'), 3600));
+      }
+      else if (currentStep === 2) {
+        document.getElementById('light-red').classList.remove('active');
+        
+        document.getElementById('caption-title').innerText = "מצב 2: צהוב ומהירות";
+        document.getElementById('caption-body').innerText = "גרופ ראשי מעביר לצהוב, וגרופ מהירות מדליק את הספרה 3 למתן הגבלת מהירות לצורך עקלתון.";
+
+        document.getElementById('box-main').classList.add('active');
+        document.getElementById('box-speed').classList.add('active');
+        
+        document.getElementById('wire-main-db').classList.add('active'); 
+        document.getElementById('wire-speed-db').classList.add('active'); 
+        
+        document.getElementById('box-db-top').classList.add('active');
+        document.getElementById('wire-db-db').classList.add('active'); 
+        document.getElementById('box-db-bot').classList.add('active');
+        document.getElementById('wire-db-insert').classList.add('active'); 
+        document.getElementById('box-insert').classList.add('active');
+
+        timeouts.push(setTimeout(() => document.getElementById('light-yellow').classList.add('active'), 800)); 
+
+        timeouts.push(setTimeout(() => document.getElementById('wire-mast-speed').classList.add('active'), 600)); 
+        timeouts.push(setTimeout(() => document.getElementById('light-speed').classList.add('active'), 1200)); 
+      }
+      else if (currentStep === 3) {
+        document.getElementById('light-red').classList.remove('active');
+        
+        document.getElementById('caption-title').innerText = "מצב 3: ירוק (אישור סופי)";
+        document.getElementById('caption-body').innerText = "הגבלת המהירות מבוטלת (גרופ מהירות כבה). הגרופ הראשי מעביר את הסימנור לירוק.";
+
+        document.getElementById('box-main').classList.add('active');
+        document.getElementById('wire-main-db').classList.add('active');
+        
+        document.getElementById('box-db-top').classList.add('active');
+        document.getElementById('wire-db-db').classList.add('active');
+        document.getElementById('box-db-bot').classList.add('active');
+        document.getElementById('wire-db-insert').classList.add('active');
+        document.getElementById('box-insert').classList.add('active');
+
+        timeouts.push(setTimeout(() => document.getElementById('wire-mast-main').classList.add('active'), 400));
+        timeouts.push(setTimeout(() => document.getElementById('light-green').classList.add('active'), 800));
+      }
+    }
+
+    function nextStep() {
+      if (currentStep < totalSteps) {
+        currentStep++;
+        updateState();
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        updateState();
+      }
+    }
+
+    function resetSystem() {
+      currentStep = 0;
+      updateState();
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'ArrowRight' || e.code === 'Space') nextStep();
+      if (e.code === 'ArrowLeft') prevStep();
+      if (e.code === 'Escape') resetSystem();
+    });
+
+  </script>
+</body>
+</html>
       border-bottom: 0.5px solid #ffffff15; z-index: 100;
       font-family: 'DM Mono', monospace;
     }
