@@ -72,8 +72,8 @@ svg{display:block}
 <body>
 <div class="grid-bg"></div>
 <div class="header">
-  <span class="header-logo">LAB / איתות רכבתי</span>
   <a href="index.html" class="nav-back">← חזרה למעבדות</a>
+  <span class="header-logo">LAB / איתות רכבתי</span>
   <span class="step-lbl" id="step-lbl">שלב 0 / 2</span>
 </div>
 
@@ -160,7 +160,7 @@ svg{display:block}
   <button class="btn" onclick="prev()">◀ הקודם</button>
   <button class="btn" onclick="reset()" style="background:#101010;border-color:#1e1e1e">↺ איפוס</button>
   <div class="caption">
-    <div class="cap-title" id="cap-title">מצב 0: ראשי אדום — עצור</div>
+    <div class="cap-title" id="cap-title">מצב 0: ראשי אדום — עצור בראשי</div>
     <div class="cap-body"  id="cap-body">ראשי: אדום. מוקדם מציג אלכסון כתום (צהוב עליון + צהוב תחתון).</div>
   </div>
   <button class="btn" onclick="next()">הבא ▶</button>
@@ -203,8 +203,8 @@ function render() {
   document.getElementById('step-lbl').textContent = `שלב ${step} / ${TOTAL}`;
   
   if(step === 0) {
-    document.getElementById('cap-title').textContent = 'מצב 0: ראשי אדום — עצור';
-    document.getElementById('cap-body').textContent = 'מצב המתנה. ראשי: אדום מלא. מוקדם מתריע עם אלכסון כתום (צהוב עליון + צהוב תחתון).';
+    document.getElementById('cap-title').textContent = 'מצב 0: ראשי אדום — עצור בראשי';
+    document.getElementById('cap-body').textContent = 'ראשי: אדום . מוקדם מתריע עם אלכסון כתום (צהוב עליון + צהוב תחתון).';
     
     W(ALL_W, 'red'); 
     B(ALL_B, 'red');
@@ -213,8 +213,8 @@ function render() {
     L('d-bot-y', 'yellow'); // Forms the correct left-leaning '/' orange diagonal
   }
   else if(step === 1) {
-    document.getElementById('cap-title').textContent = 'מצב 1: ראשי צהוב — אזהרה / האטה';
-    document.getElementById('cap-body').textContent = 'ראשי: צהוב. מוקדם מאותת במצב מעורב: ירוק עליון וכתום תחתון להכנה לעצירה.';
+    document.getElementById('cap-title').textContent = 'מצב 1: ראשי צהוב — התכונן לעקלתון';
+    document.getElementById('cap-body').textContent = 'ראשי: צהוב. מוקדם מאותת על עקלתון: ירוק עליון וכתום תחתון להכנה לעקלתון.';
     
     W(ALL_W, 'yellow'); 
     B(ALL_B, 'yellow');
@@ -223,8 +223,8 @@ function render() {
     L('d-bot-y', 'yellow'); // Mixed warning state
   }
   else if(step === 2) {
-    document.getElementById('cap-title').textContent = 'מצב 2: ראשי ירוק — מעבר חופשי';
-    document.getElementById('cap-body').textContent = 'המסלול פתוח. ראשי: ירוק. מוקדם מאשר כניסה חלקה עם אלכסון ירוק (ירוק עליון + ירוק תחתון).';
+    document.getElementById('cap-title').textContent = 'מצב 2: ראשי ירוק — בראשי סע';
+    document.getElementById('cap-body').textContent = 'המסלול פתוח. ראשי: ירוק. מוקדם מתריע על מעבר בראשי עם אלכסון ירוק (ירוק עליון + ירוק תחתון).';
     
     W(ALL_W, 'green'); 
     B(ALL_B, 'green');
