@@ -2,6 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Railway Signal Logic - Flawless Edition</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -37,7 +38,7 @@
   .canvas-wrap{position:relative;z-index:1;flex:1;width:100%}
   svg{display:block}
 
-  /* Floating Controls Panel */
+  /* Floating Controls Panel (Desktop) */
   #controls-panel {
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
     width: 95%; max-width: 900px;
@@ -53,10 +54,31 @@
   .control-btn:hover { background: #4ade80; color: #111; border-color: #4ade80; }
   .control-btn:active { transform: scale(0.95); }
   
-  /* הדחיפה של הטקסט לאמצע */
   #caption-text { flex-grow: 1; text-align: center; }
   #caption-title { font-size: 15px; font-weight: 700; color: #4ade80; margin-bottom: 4px; }
   #caption-body { font-size: 13px; color: #ccc; }
+
+  /* התאמה למסכים קטנים (טלפונים) */
+  @media (max-width: 768px) {
+    #controls-panel {
+      bottom: 15px;
+      padding: 12px 15px;
+      flex-wrap: wrap; /* מאפשר שבירת שורות */
+      gap: 10px;
+    }
+    #caption-text {
+      order: -1; /* מעלה את הטקסט לשורה הראשונה מעל הכפתורים */
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    .control-btn {
+      flex: 1; /* פורס את הכפתורים באופן שווה לרוחב המסך */
+      padding: 10px 5px;
+      font-size: 12px;
+      text-align: center;
+    }
+    .header-logo, .step-lbl, .nav-back { font-size: 9px; }
+  }
 
   /* SVG Styles */
   .wire{stroke:#1e1e1e;stroke-width:3;fill:none;stroke-linecap:square;stroke-linejoin:miter;transition:stroke .4s,filter .4s}
