@@ -37,7 +37,7 @@
   .canvas-wrap{position:relative;z-index:1;flex:1;width:100%}
   svg{display:block}
 
-  /* Floating Controls Panel (מלבן צף מעוצב) */
+  /* Floating Controls Panel */
   #controls-panel {
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
     width: 95%; max-width: 900px;
@@ -53,6 +53,7 @@
   .control-btn:hover { background: #4ade80; color: #111; border-color: #4ade80; }
   .control-btn:active { transform: scale(0.95); }
   
+  /* הדחיפה של הטקסט לאמצע */
   #caption-text { flex-grow: 1; text-align: center; }
   #caption-title { font-size: 15px; font-weight: 700; color: #4ade80; margin-bottom: 4px; }
   #caption-body { font-size: 13px; color: #ccc; }
@@ -113,13 +114,15 @@
 </div>
 
 <div id="controls-panel">
-  <button class="control-btn" onclick="next()">הבא ▶</button>
+  <button class="control-btn" onclick="prev()">◀ הקודם</button>
+  <button class="control-btn" onclick="reset()" style="background:#333;">איפוס ↺</button>
+  
   <div id="caption-text">
     <div id="caption-title">מצב 0: ראשי אדום — עצור בראשי</div>
     <div id="caption-body">ראשי: אדום. מוקדם מציג אלכסון כתום.</div>
   </div>
-  <button class="control-btn" onclick="reset()" style="background:#333;">איפוס ↺</button>
-  <button class="control-btn" onclick="prev()">◀ הקודם</button>
+  
+  <button class="control-btn" onclick="next()">הבא ▶</button>
 </div>
 
 <script>
@@ -154,7 +157,7 @@ function render() {
   document.getElementById('step-lbl').textContent = `שלב ${step} / ${TOTAL}`;
   if(step === 0) {
     document.getElementById('caption-title').textContent = 'מצב 0: ראשי אדום — עצור בראשי';
-    document.getElementById('caption-body').textContent = 'ראשי: אדום. מוקדם מתריע עם אלכסון צהוב-צהוב .';
+    document.getElementById('caption-body').textContent = 'ראשי: אדום. מוקדם מתריע עם אלכסון כתום.';
     W(ALL_W, 'red'); B(ALL_B, 'red'); L('m-red', 'red'); L('d-top-y', 'yellow'); L('d-bot-y', 'yellow');
   } else if(step === 1) {
     document.getElementById('caption-title').textContent = 'מצב 1: ראשי צהוב — התכונן לעקלתון';
@@ -162,7 +165,7 @@ function render() {
     W(ALL_W, 'yellow'); B(ALL_B, 'yellow'); L('m-yellow', 'yellow'); L('d-top-g', 'green'); L('d-bot-y', 'yellow');
   } else if(step === 2) {
     document.getElementById('caption-title').textContent = 'מצב 2: ראשי ירוק — בראשי סע';
-    document.getElementById('caption-body').textContent = 'ראשי: ירוק. מוקדם מתריע על מעבר בסימנור ראשי.';
+    document.getElementById('caption-body').textContent = 'המסלול פתוח. ראשי: ירוק. מוקדם מתריע על מעבר בראשי.';
     W(ALL_W, 'green'); B(ALL_B, 'green'); L('m-green', 'green'); L('d-top-g', 'green'); L('d-bot-g', 'green');
   }
 }
