@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="he" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Railway Lab</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 { color: #4488EE; margin-bottom: 20px; }
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 350px;
+        }
+        .btn {
+            background-color: #1e1e1e;
+            color: white;
+            padding: 25px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: 2px solid #4488EE;
+            transition: all 0.2s;
+        }
+        .btn:active {
+            background-color: #4488EE;
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Railway Lab Control</h2>
+
+    <nav class="nav-menu">
+        <a href="main.html" class="btn">Main Signal</a>
+        <a href="distance.html" class="btn">Distance Signal</a>
+        <a href="point.html" class="btn">Point Machine</a>
+    </nav>
+
+</body>
+</html>
