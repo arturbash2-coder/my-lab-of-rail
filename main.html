@@ -259,20 +259,20 @@
       deactivateAll();
       document.getElementById('step-counter').innerText = `שלב ${currentStep} / ${totalSteps}`;
 
-      if (currentStep === 0) {
+if (currentStep === 0) {
         document.getElementById('caption-title').innerText = "מצב 0: סימנור אדום";
         document.getElementById('caption-body').innerText = "מצב המתנה. המערכת שולחת פקודה אקטיבית באדום לסגירת הדרך.";
         
         document.getElementById('box-main').classList.add('active', 'active-red');
         
-        // מדליק את הנתיב מהגרופ לסימנור בצבע אדום
-        setRedWire('wire-main-db');
-        document.getElementById('box-db-top').classList.add('active');
-        setRedWire('wire-db-db');
-        document.getElementById('box-db-bot').classList.add('active');
-        setRedWire('wire-db-insert');
-        document.getElementById('box-insert').classList.add('active');
-        setRedWire('wire-mast-main');
+        // כאן הוספתי timeouts כדי שזה יזרום אחד אחרי השני בהדלקה הראשונה:
+        timeouts.push(setTimeout(() => setRedWire('wire-main-db'), 200));
+        timeouts.push(setTimeout(() => document.getElementById('box-db-top').classList.add('active'), 600));
+        timeouts.push(setTimeout(() => setRedWire('wire-db-db'), 900));
+        timeouts.push(setTimeout(() => document.getElementById('box-db-bot').classList.add('active'), 1300));
+        timeouts.push(setTimeout(() => setRedWire('wire-db-insert'), 1600));
+        timeouts.push(setTimeout(() => document.getElementById('box-insert').classList.add('active'), 2000));
+        timeouts.push(setTimeout(() => setRedWire('wire-mast-main'), 2400));
       }
       else if (currentStep === 1) {
         document.getElementById('caption-title').innerText = "מצב 1: אזהרה פעילה (באדום בלבד)";
