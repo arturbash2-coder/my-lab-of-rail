@@ -118,22 +118,22 @@
   <div class="canvas-wrap">
     <svg viewBox="0 0 1100 700" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
       
-      <rect class="interlocking-box" x="80" y="100" width="450" height="460" />
-      <text class="interlocking-text" x="95" y="540">interlocking</text>
+      <rect class="interlocking-box" x="80" y="80" width="400" height="460" />
+      <text class="interlocking-text" x="95" y="520">interlocking</text>
 
       <g id="group-shunting" transform="translate(120, 200)">
         <rect class="box" id="box-shunt" x="0" y="0" width="150" height="60" />
         <text class="box-text" x="75" y="30">גרופ עיתוק</text>
       </g>
 
-      <g id="db-top" transform="translate(380, 150)">
-        <rect class="box" id="box-db-top" x="0" y="0" width="80" height="150" />
-        <text class="box-text" transform="rotate(90, 40, 75)" x="40" y="75">DB BOARD</text>
+      <g id="db-top" transform="translate(330, 110)">
+        <rect class="box" id="box-db-top" x="0" y="0" width="80" height="300" />
+        <text class="box-text" transform="rotate(90, 40, 150)" x="40" y="150">DB BOARD</text>
       </g>
 
-      <g id="db-bot" transform="translate(380, 400)">
-        <rect class="box" id="box-db-bot" x="0" y="0" width="80" height="120" />
-        <text class="box-text" transform="rotate(90, 40, 60)" x="40" y="60">DB BOARD</text>
+      <g id="db-bottom" transform="translate(510, 380)">
+        <rect class="box box-main" id="box-db-bot" x="0" y="0" width="80" height="200" />
+        <text class="box-text" transform="rotate(90, 40, 100)" x="40" y="100">DB BOARD</text>
       </g>
 
       <rect class="signal-mast" x="892" y="80" width="10" height="500" rx="4" />
@@ -143,13 +143,13 @@
         <text class="box-text" x="40" y="40">INSERT BOX</text>
       </g>
 
-      <path class="wire wire-animate" id="wire-shunt-db" d="M 270 230 L 380 230" />
+      <path class="wire wire-animate" id="wire-shunt-db" d="M 270 230 L 330 230" />
       
-      <path class="wire wire-animate" id="wire-db-db" d="M 420 300 L 420 400" />
+      <path class="wire wire-animate" id="wire-db-db" d="M 370 410 L 370 480 L 510 480" />
       
-      <path class="wire wire-animate" id="wire-db-insert" d="M 460 460 L 857 460" />
+      <path class="wire wire-animate" id="wire-db-insert" d="M 590 480 L 680 480 L 680 460 L 857 460" />
       
-      <path class="wire wire-animate" id="wire-mast-up" d="M 897 420 L 897 160" />
+      <path class="wire wire-animate" id="wire-mast-up" d="M 897 420 L 897 85" />
 
       <g id="signal-head" transform="translate(827, 40)">
         <rect class="signal-bg" x="0" y="0" width="140" height="120" />
@@ -188,11 +188,9 @@
 
     function deactivateAll() {
       clearAllTimeouts();
-      // Remove all active states from everything
       document.querySelectorAll('.active-red, .active-white').forEach(el => {
         el.classList.remove('active-red', 'active-white');
       });
-      // Remove text coloring classes
       const title = document.getElementById('caption-title');
       title.classList.remove('text-red', 'text-white');
     }
@@ -209,7 +207,6 @@
         title.classList.add('text-red');
         bodyText.innerText = "ברירת מחדל אדום , כשאין מסלול פתוח";
         
-        // Sequence: Group -> Wire1 -> DB Top -> Wire2 -> DB Bot -> Wire3 -> Insert -> Wire4 -> Light Red
         document.getElementById('box-shunt').classList.add('active-red');
         timeouts.push(setTimeout(() => document.getElementById('wire-shunt-db').classList.add('active-red'), 200));
         timeouts.push(setTimeout(() => document.getElementById('box-db-top').classList.add('active-red'), 600));
@@ -225,7 +222,6 @@
         title.classList.add('text-white');
         bodyText.innerText = "לעיתוק 2 תפקידים , הלבן מאותת לנו שהמסוטים התייצבו בהצלחה במסלול רגיל , וגם בזמן העתקת רכבת נותן את הפקודה *סע* שמבצע עיתוק בתחום התחנה";
         
-        // Sequence: Group -> Wire1 -> DB Top -> Wire2 -> DB Bot -> Wire3 -> Insert -> Wire4 -> Light White
         document.getElementById('box-shunt').classList.add('active-white');
         timeouts.push(setTimeout(() => document.getElementById('wire-shunt-db').classList.add('active-white'), 200));
         timeouts.push(setTimeout(() => document.getElementById('box-db-top').classList.add('active-white'), 600));
@@ -263,9 +259,7 @@
       if (e.code === 'Escape') resetSystem();
     });
 
-    // Run first state on load
     updateState();
-
   </script>
 </body>
 </html>
