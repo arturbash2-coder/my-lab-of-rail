@@ -89,7 +89,13 @@
     .wire-series.active { stroke-dashoffset: 0; stroke: #f8fafc; }
 
     .box { fill: #1e1e24; stroke: #444; stroke-width: 2; rx: 6; transition: all 0.3s; }
+    
+    /* הגדרות חיווי צבעים דינמיים לגרופ הראשי */
     .box-main.active { stroke: #4ade80; fill: #223322; }
+    .box-main.active.active-red { stroke: #ef4444; fill: #331919; }
+    .box-main.active.active-yellow { stroke: #fbbf24; fill: #332d19; }
+    .box-main.active.active-green { stroke: #4ade80; fill: #223322; }
+    
     .box-speed.active { stroke: #fbbf24; fill: #332d19; }
     .box-warn.active { stroke: #ef4444; fill: #331919; }
     .box-text { font-size: 13px; fill: #aaa; text-anchor: middle; dominant-baseline: middle; font-weight: 700; }
@@ -139,7 +145,8 @@
       <path class="wire wire-animate" id="wire-db-db" d="M 370 410 L 370 580 L 510 580" />
       <path class="wire wire-animate" id="wire-db-insert" d="M 590 580 L 890 580 L 890 500" />
 
-      <path class="wire wire-animate" id="wire-mast-main" d="M 890 350 L 890 270" />
+      <path class="wire wire-animate" id="wire-mast-main" d="M 890 350 L 890 165" />
+      
       <path class="wire wire-speed" id="wire-mast-speed" d="M 875 350 L 875 120" />
       <path class="wire wire-warning" id="wire-mast-warn" d="M 865 350 L 865 300" />
       
@@ -156,7 +163,7 @@
       </g>
 
       <g id="group-warn">
-        <rect class="box box-main" id="box-warn" x="120" y="320" width="150" height="60" />
+        <rect class="box box-warn" id="box-warn" x="120" y="320" width="150" height="60" />
         <text class="box-text" x="195" y="350">גרופ אזהרה</text>
       </g>
 
@@ -185,9 +192,9 @@
       <text class="speed-digit" id="light-speed" x="890" y="102" font-family="'DM Mono'">3</text>
 
       <rect class="signal-bg" x="865" y="140" width="50" height="125" />
-      <circle class="lens red active" id="light-red" cx="890" cy="165" r="14" />
+      <circle class="lens green" id="light-green" cx="890" cy="165" r="14" />
       <circle class="lens yellow" id="light-yellow" cx="890" cy="202" r="14" />
-      <circle class="lens green" id="light-green" cx="890" cy="240" r="14" />
+      <circle class="lens red active" id="light-red" cx="890" cy="240" r="14" />
 
       <rect class="signal-bg" x="865" y="275" width="50" height="60" />
       <circle class="lens white" id="warn-left" cx="877" cy="295" r="7" />
@@ -203,7 +210,7 @@
     
     <div id="caption-text">
       <div id="caption-title">מצב 0: סימנור אדום</div>
-      <div id="caption-body">מצב המתנה. המערכת סגורה וממתינה לפקודה.</div>
+      <div id="caption-body">מצב המתנה. המערכת שולחת פקודה אקטיבית לסגירת הדרך.</div>
     </div>
     
     <button class="control-btn" onclick="nextStep()">הבא ▶</button>
@@ -221,9 +228,10 @@
 
     function deactivateAll() {
       clearAllTimeouts();
-      document.querySelectorAll('.active').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.active, .active-red, .active-yellow, .active-green').forEach(el => {
+        el.classList.remove('active', 'active-red', 'active-yellow', 'active-green');
+      });
       
-      // איפוס צבעים מיוחדים שהוספנו דרך קוד ישיר
       document.querySelectorAll('.wire').forEach(el => {
         el.style.stroke = '';
         el.style.filter = '';
@@ -239,34 +247,59 @@
       el.style.filter = 'drop-shadow(0 0 5px #fbbf24)';
     }
 
+    // פונקציה חדשה שצובעת את החוט באדום ומפעילה אותו
+    function setRedWire(id) {
+      const el = document.getElementById(id);
+      el.classList.add('active');
+      el.style.stroke = '#ef4444';
+      el.style.filter = 'drop-shadow(0 0 5px #ef4444)';
+    }
+
     function updateState() {
       deactivateAll();
       document.getElementById('step-counter').innerText = `שלב ${currentStep} / ${totalSteps}`;
 
       if (currentStep === 0) {
         document.getElementById('caption-title').innerText = "מצב 0: סימנור אדום";
-        document.getElementById('caption-body').innerText = "מצב המתנה. הדרך חסומה.";
+        document.getElementById('caption-body').innerText = "מצב המתנה. המערכת שולחת פקודה אקטיבית באדום לסגירת הדרך.";
+        
+        document.getElementById('box-main').classList.add('active', 'active-red');
+        
+        // מדליק את הנתיב מהגרופ לסימנור בצבע אדום
+        setRedWire('wire-main-db');
+        document.getElementById('box-db-top').classList.add('active');
+        setRedWire('wire-db-db');
+        document.getElementById('box-db-bot').classList.add('active');
+        setRedWire('wire-db-insert');
+        document.getElementById('box-insert').classList.add('active');
+        setRedWire('wire-mast-main');
       }
       else if (currentStep === 1) {
         document.getElementById('caption-title').innerText = "מצב 1: אזהרה פעילה (באדום בלבד)";
         document.getElementById('caption-body').innerText = "כאשר יש תקלה שאינה מאפשרת לפתוח את הראשי, הרכבת תעבור באזהרה עד 30 קמ\"ש.";
+        
+        document.getElementById('box-main').classList.add('active', 'active-red');
+        
+        // משמר את הקו האדום של הסימנור הראשי גם במצב אזהרה
+        setRedWire('wire-main-db');
+        document.getElementById('box-db-top').classList.add('active');
+        setRedWire('wire-db-db');
+        document.getElementById('box-db-bot').classList.add('active');
+        setRedWire('wire-db-insert');
+        document.getElementById('box-insert').classList.add('active');
+        setRedWire('wire-mast-main');
         
         document.getElementById('box-calib').classList.add('active');
         document.getElementById('wire-calib-warn').classList.add('active');
         
         timeouts.push(setTimeout(() => document.getElementById('box-warn').classList.add('active'), 400));
         timeouts.push(setTimeout(() => document.getElementById('wire-warn-db').classList.add('active'), 800));
-        timeouts.push(setTimeout(() => document.getElementById('box-db-top').classList.add('active'), 1200));
-        timeouts.push(setTimeout(() => document.getElementById('wire-db-db').classList.add('active'), 1500));
-        timeouts.push(setTimeout(() => document.getElementById('box-db-bot').classList.add('active'), 1800));
-        timeouts.push(setTimeout(() => document.getElementById('wire-db-insert').classList.add('active'), 2100));
-        timeouts.push(setTimeout(() => document.getElementById('box-insert').classList.add('active'), 2400));
         
-        timeouts.push(setTimeout(() => document.getElementById('wire-mast-warn').classList.add('active'), 2800));
-        timeouts.push(setTimeout(() => document.getElementById('wire-series').classList.add('active'), 2800));
-        timeouts.push(setTimeout(() => document.getElementById('warn-right').classList.add('active'), 3000));
-        timeouts.push(setTimeout(() => document.getElementById('warn-bottom').classList.add('active'), 3300));
-        timeouts.push(setTimeout(() => document.getElementById('warn-left').classList.add('active'), 3600));
+        timeouts.push(setTimeout(() => document.getElementById('wire-mast-warn').classList.add('active'), 1200));
+        timeouts.push(setTimeout(() => document.getElementById('wire-series').classList.add('active'), 1200));
+        timeouts.push(setTimeout(() => document.getElementById('warn-right').classList.add('active'), 1500));
+        timeouts.push(setTimeout(() => document.getElementById('warn-bottom').classList.add('active'), 1800));
+        timeouts.push(setTimeout(() => document.getElementById('warn-left').classList.add('active'), 2100));
       }
       else if (currentStep === 2) {
         document.getElementById('light-red').classList.remove('active');
@@ -274,10 +307,9 @@
         document.getElementById('caption-title').innerText = "מצב 2: צהוב ומהירות";
         document.getElementById('caption-body').innerText = "גרופ ראשי מעביר לצהוב, וגרופ מהירות מדליק את הספרה 3 למתן הגבלת מהירות לצורך עקלתון.";
 
-        document.getElementById('box-main').classList.add('active');
+        document.getElementById('box-main').classList.add('active', 'active-yellow');
         document.getElementById('box-speed').classList.add('active');
         
-        // צביעת חוטים בצהוב
         setYellowWire('wire-main-db');
         setYellowWire('wire-speed-db');
         document.getElementById('box-db-top').classList.add('active');
@@ -300,7 +332,7 @@
         document.getElementById('caption-title').innerText = "מצב 3: ירוק (אישור סופי)";
         document.getElementById('caption-body').innerText = "הגבלת המהירות מבוטלת (גרופ מהירות כבה). הגרופ הראשי מעביר את הסימנור לירוק.";
 
-        document.getElementById('box-main').classList.add('active');
+        document.getElementById('box-main').classList.add('active', 'active-green');
         document.getElementById('wire-main-db').classList.add('active');
         
         document.getElementById('box-db-top').classList.add('active');
@@ -338,6 +370,8 @@
       if (e.code === 'ArrowLeft') prevStep();
       if (e.code === 'Escape') resetSystem();
     });
+
+    updateState();
 
   </script>
 </body>
