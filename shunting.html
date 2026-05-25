@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>מעבדה דיגיטלית - סימנור עיתוק (עם מחלקים)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap');
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: #111111;
+      font-family: 'Heebo', sans-serif;
+      color: #e8e2d8;
+      min-height: 100vh;
+      overflow: hidden;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .grid-bg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background-image: linear-gradient(to right, #222 1px, transparent 1px), linear-gradient(to bottom, #222 1px, transparent 1px);
+      background-size: 20px 20px; z-index: -1;
+    }
+
+    #header {
+      position: fixed; top: 0; left: 0; right: 0; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; background: #1a1a1e90; backdrop-filter: blur(8px);
+      border-bottom: 0.5px solid #ffffff15; z-index: 100;
+    }
+    
+    .nav-back { color: #4ade80; text-decoration: none; font-weight: bold; font-size: 14px; flex: 1; font-family: 'Courier New', monospace; }
+    #logo { font-size: 12px; font-weight: 700; color: #4ade80; text-transform: uppercase; flex: 1; text-align: center; font-family: 'DM Mono', monospace; }
+    #step-counter { font-size: 12px; color: #7a7870; flex: 1; text-align: left; font-family: 'DM Mono', monospace; }
+
+    .canvas-wrap {
+      position: absolute; top: 60px; bottom: 100px; left: 0; right: 0;
+      z-index: 1; display: flex; align-items: center; justify-content: center;
+      padding: 10px;
+    }
+    
+    svg { width: 100%; height: 100%; max-width: 1100px; }
+
+    #controls-panel {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      width: 95%; max-width: 900px;
+      display: flex; flex-direction: row; gap: 15px;
+      background: #1a1a1ee0; border: 1px solid #333; border-radius: 8px;
+      padding: 15px 25px; backdrop-filter: blur(10px); z-index: 100; align-items: center;
+    }
+
+    .control-btn {
+      background: #2a2a2e; border: 1px solid #444; color: #fff;
+      padding: 8px 16px; border-radius: 6px; font-family: 'Heebo', sans-serif; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .control-btn:hover { background: #4ade80; color: #111; border-color: #4ade80; }
+    .control-btn:active { transform: scale(0.95); }
+
+    #caption-text { flex-grow: 1; text-align: center; }
+    #caption-title { font-size: 15px; font-weight: 700; transition: color 0.3s; margin-bottom: 4px; }
+    #caption-body { font-size: 13px; color: #ccc; }
+
+    /* SVG Elements */
+    .box { fill: #1e1e24; stroke: #444; stroke-width: 2; rx: 6; transition: all 0.4s; }
+    .box-text { font-size: 14px; fill: #aaa; text-anchor: middle; dominant-baseline: middle; font-weight: 700; }
+    .interlocking-box { fill: none; stroke: #555; stroke-width: 1.5; stroke-dasharray: 8 4; rx: 4; }
+    .interlocking-text { fill: #fff; font-size: 16px; font-family: 'DM Mono'; }
+
+    /* Signal Specifics */
+    .signal-mast { fill: #151515; stroke: #333; stroke-width: 2; }
+    .signal-bg { fill: #0a0a0a; stroke: #222; stroke-width: 2; rx: 6; }
+    .lens { fill: #111; stroke: #000; stroke-width: 2; transition: fill 0.3s, filter 0.3s; }
+    .lens-shade { fill: #000; fill-opacity: 0.8; }
+
+    /* Wires */
+    .wire { stroke: #333; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.4s, filter 0.4s; }
+    .wire-animate { stroke-dasharray: 1000; stroke-dashoffset: 1000; transition: stroke-dashoffset 1s ease-in-out, stroke 0.4s, filter 0.4s; }
+
+    /* Dynamic Classes for States */
+    /* State 0: RED */
+    .active-red { stroke-dashoffset: 0; stroke: #ef4444; filter: drop-shadow(0 0 5px #ef4444); }
+    rect.active-red { fill: #331919; stroke: #ef4444; filter: none; }
+    .lens.active-red { fill: #ef4444; filter: drop-shadow(0 0 15px #ef4444); stroke: #ef4444; }
+    .text-red { color: #ef4444 !important; }
+
+    /* State 1: WHITE */
+    .active-white { stroke-dashoffset: 0; stroke: #ffffff; filter: drop-shadow(0 0 5px #ffffff); }
+    rect.active-white { fill: #2a2a2e; stroke: #ffffff; filter: none; }
+    .lens.active-white { fill: #ffffff; filter: drop-shadow(0 0 15px #ffffff); stroke: #ffffff; }
+    .text-white { color: #ffffff !important; }
+
+    @media (max-width: 768px) {
+      .canvas-wrap { bottom: 140px; }
+      #controls-panel { bottom: 15px; padding: 12px 15px; flex-wrap: wrap; gap: 10px; }
+      #caption-text { order: -1; width: 100%; margin-bottom: 5px; }
+      .control-btn { flex: 1; padding: 10px 5px; font-size: 12px; text-align: center; }
+      .nav-back { font-size: 12px; }
+      #logo, #step-counter { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="grid-bg"></div>
+
+  <div id="header">
+    <a href="index.html" class="nav-back">← חזרה למעבדות</a>
+    <div id="logo">LAB / סימנור עיתוק</div>
+    <div id="step-counter">שלב 0 / 1</div>
+  </div>
+
+  <div class="canvas-wrap">
+    <svg viewBox="0 0 1100 700" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      
+      <rect class="interlocking-box" x="80" y="100" width="450" height="460" />
+      <text class="interlocking-text" x="95" y="540">interlocking</text>
+
+      <g id="group-shunting" transform="translate(120, 200)">
+        <rect class="box" id="box-shunt" x="0" y="0" width="150" height="60" />
+        <text class="box-text" x="75" y="30">גרופ עיתוק</text>
+      </g>
+
+      <g id="db-top" transform="translate(380, 150)">
+        <rect class="box" id="box-db-top" x="0" y="0" width="80" height="150" />
+        <text class="box-text" transform="rotate(90, 40, 75)" x="40" y="75">DB BOARD</text>
+      </g>
+
+      <g id="db-bot" transform="translate(380, 400)">
+        <rect class="box" id="box-db-bot" x="0" y="0" width="80" height="120" />
+        <text class="box-text" transform="rotate(90, 40, 60)" x="40" y="60">DB BOARD</text>
+      </g>
+
+      <rect class="signal-mast" x="892" y="80" width="10" height="500" rx="4" />
+
+      <g id="insert-box-group" transform="translate(857, 420)">
+        <rect class="box" id="box-insert" x="0" y="0" width="80" height="80" />
+        <text class="box-text" x="40" y="40">INSERT BOX</text>
+      </g>
+
+      <path class="wire wire-animate" id="wire-shunt-db" d="M 270 230 L 380 230" />
+      
+      <path class="wire wire-animate" id="wire-db-db" d="M 420 300 L 420 400" />
+      
+      <path class="wire wire-animate" id="wire-db-insert" d="M 460 460 L 857 460" />
+      
+      <path class="wire wire-animate" id="wire-mast-up" d="M 897 420 L 897 160" />
+
+      <g id="signal-head" transform="translate(827, 40)">
+        <rect class="signal-bg" x="0" y="0" width="140" height="120" />
+        
+        <ellipse class="lens-shade" cx="70" cy="35" rx="25" ry="8" transform="rotate(-5, 70, 35)" />
+        <circle class="lens" id="light-red" cx="70" cy="45" r="16" />
+
+        <ellipse class="lens-shade" cx="70" cy="85" rx="25" ry="8" transform="rotate(-5, 70, 85)" />
+        <circle class="lens" id="light-white" cx="70" cy="95" r="16" />
+      </g>
+
+    </svg>
+  </div>
+
+  <div id="controls-panel">
+    <button class="control-btn" onclick="prevStep()">◀ הקודם</button>
+    <button class="control-btn" onclick="resetSystem()" style="background: #333;">איפוס ↺</button>
+    
+    <div id="caption-text">
+      <div id="caption-title">טוען נתונים...</div>
+      <div id="caption-body">המתן למערכת</div>
+    </div>
+    
+    <button class="control-btn" onclick="nextStep()">הבא ▶</button>
+  </div>
+
+  <script>
+    let currentStep = 0;
+    const totalSteps = 1;
+    let timeouts = [];
+
+    function clearAllTimeouts() {
+      timeouts.forEach(t => clearTimeout(t));
+      timeouts = [];
+    }
+
+    function deactivateAll() {
+      clearAllTimeouts();
+      // Remove all active states from everything
+      document.querySelectorAll('.active-red, .active-white').forEach(el => {
+        el.classList.remove('active-red', 'active-white');
+      });
+      // Remove text coloring classes
+      const title = document.getElementById('caption-title');
+      title.classList.remove('text-red', 'text-white');
+    }
+
+    function updateState() {
+      deactivateAll();
+      document.getElementById('step-counter').innerText = `שלב ${currentStep} / ${totalSteps}`;
+
+      const title = document.getElementById('caption-title');
+      const bodyText = document.getElementById('caption-body');
+
+      if (currentStep === 0) {
+        title.innerText = "מצב 0: סימנור אדום (עצירה)";
+        title.classList.add('text-red');
+        bodyText.innerText = "ברירת מחדל אדום , כשאין מסלול פתוח";
+        
+        // Sequence: Group -> Wire1 -> DB Top -> Wire2 -> DB Bot -> Wire3 -> Insert -> Wire4 -> Light Red
+        document.getElementById('box-shunt').classList.add('active-red');
+        timeouts.push(setTimeout(() => document.getElementById('wire-shunt-db').classList.add('active-red'), 200));
+        timeouts.push(setTimeout(() => document.getElementById('box-db-top').classList.add('active-red'), 600));
+        timeouts.push(setTimeout(() => document.getElementById('wire-db-db').classList.add('active-red'), 900));
+        timeouts.push(setTimeout(() => document.getElementById('box-db-bot').classList.add('active-red'), 1300));
+        timeouts.push(setTimeout(() => document.getElementById('wire-db-insert').classList.add('active-red'), 1600));
+        timeouts.push(setTimeout(() => document.getElementById('box-insert').classList.add('active-red'), 2200));
+        timeouts.push(setTimeout(() => document.getElementById('wire-mast-up').classList.add('active-red'), 2500));
+        timeouts.push(setTimeout(() => document.getElementById('light-red').classList.add('active-red'), 3000));
+      } 
+      else if (currentStep === 1) {
+        title.innerText = "מצב 1: סימנור לבן (אישור עיתוק)";
+        title.classList.add('text-white');
+        bodyText.innerText = "לעיתוק 2 תפקידים , הלבן מאותת לנו שהמסוטים התייצבו בהצלחה במסלול רגיל , וגם בזמן העתקת רכבת נותן את הפקודה *סע* שמבצע עיתוק בתחום התחנה";
+        
+        // Sequence: Group -> Wire1 -> DB Top -> Wire2 -> DB Bot -> Wire3 -> Insert -> Wire4 -> Light White
+        document.getElementById('box-shunt').classList.add('active-white');
+        timeouts.push(setTimeout(() => document.getElementById('wire-shunt-db').classList.add('active-white'), 200));
+        timeouts.push(setTimeout(() => document.getElementById('box-db-top').classList.add('active-white'), 600));
+        timeouts.push(setTimeout(() => document.getElementById('wire-db-db').classList.add('active-white'), 900));
+        timeouts.push(setTimeout(() => document.getElementById('box-db-bot').classList.add('active-white'), 1300));
+        timeouts.push(setTimeout(() => document.getElementById('wire-db-insert').classList.add('active-white'), 1600));
+        timeouts.push(setTimeout(() => document.getElementById('box-insert').classList.add('active-white'), 2200));
+        timeouts.push(setTimeout(() => document.getElementById('wire-mast-up').classList.add('active-white'), 2500));
+        timeouts.push(setTimeout(() => document.getElementById('light-white').classList.add('active-white'), 3000));
+      }
+    }
+
+    function nextStep() {
+      if (currentStep < totalSteps) {
+        currentStep++;
+        updateState();
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        updateState();
+      }
+    }
+
+    function resetSystem() {
+      currentStep = 0;
+      updateState();
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'ArrowRight' || e.code === 'Space') nextStep();
+      if (e.code === 'ArrowLeft') prevStep();
+      if (e.code === 'Escape') resetSystem();
+    });
+
+    // Run first state on load
+    updateState();
+
+  </script>
+</body>
+</html>
