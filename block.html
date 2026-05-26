@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Railway Signal Logic - Train Animation</title>
+<title>Railway Signal Logic - Flawless Edition</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{
@@ -17,28 +17,20 @@
                      linear-gradient(to bottom,#181818 1px,transparent 1px);
     background-size:24px 24px;z-index:0;
   }
-  /* Header Styling */
   .header{
     position:relative;z-index:10;width:100%;padding:12px 20px;
     background:#111b;border-bottom:1px solid #1e1e1e;
     display:flex;align-items:center;font-family:'Courier New', monospace;
   }
   .nav-back, .step-lbl { flex: 1; }
-  .header-logo { 
-    flex: 1; text-align: center; color: #4ade80; 
-    font-weight: 700; font-size: 11px; letter-spacing: .06em; 
-  }
-  .nav-back { 
-    color: #4ade80; text-decoration: none; font-size: 11px; 
-    font-weight: 700; transition: opacity 0.2s; 
-  }
+  .header-logo { flex: 1; text-align: center; color: #4ade80; font-weight: 700; font-size: 11px; letter-spacing: .06em; }
+  .nav-back { color: #4ade80; text-decoration: none; font-size: 11px; font-weight: 700; transition: opacity 0.2s; }
   .nav-back:hover { opacity: 0.7; }
   .step-lbl { text-align: left; color: #7a7870; font-size: 11px; }
 
   .canvas-wrap{position:relative;z-index:1;flex:1;width:100%}
   svg{display:block}
 
-  /* Floating Controls Panel */
   #controls-panel {
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
     width: 95%; max-width: 900px;
@@ -59,20 +51,16 @@
   #caption-body { font-size: 13px; color: #ccc; }
 
   @media (max-width: 768px) {
-    #controls-panel {
-      bottom: 15px; padding: 12px 15px; flex-wrap: wrap; gap: 10px;
-    }
+    #controls-panel { bottom: 15px; padding: 12px 15px; flex-wrap: wrap; gap: 10px; }
     #caption-text { order: -1; width: 100%; margin-bottom: 5px; }
     .control-btn { flex: 1; padding: 10px 5px; font-size: 12px; text-align: center; }
-    .header-logo, .step-lbl, .nav-back { font-size: 9px; }
   }
 
-  /* SVG Styles */
-  .wire{stroke:#1e1e1e;stroke-width:3;fill:none;stroke-linecap:square;stroke-linejoin:miter;transition:stroke .4s,filter .4s}
+  .wire{stroke:#1e1e1e;stroke-width:3;fill:none;stroke-linecap:square;stroke-linejoin:miter;transition:stroke 0.5s,filter 0.5s}
   .wire.green  {stroke:#22c55e;filter:drop-shadow(0 0 4px #22c55ebb)}
   .wire.red    {stroke:#ef4444;filter:drop-shadow(0 0 4px #ef4444bb)}
 
-  .cbox{fill:#131313;stroke:#2a2a2a;stroke-width:1.5;transition:fill .4s,stroke .4s}
+  .cbox{fill:#131313;stroke:#2a2a2a;stroke-width:1.5;transition:fill 0.5s,stroke 0.5s}
   .cbox.ag{stroke:#22c55e;fill:#0d190d}
   .cbox.ar{stroke:#ef4444;fill:#190d0d}
 
@@ -86,14 +74,8 @@
   .lens.lg{fill:#22c55e;filter:drop-shadow(0 0 14px #22c55ecc)}
   .lens.lr{fill:#ef4444;filter:drop-shadow(0 0 14px #ef4444cc)}
 
-  /* Train Animation Classes */
-  #train-group {
-    transform: translateX(-200px);
-  }
-  #train-group.driving {
-    transform: translateX(1350px);
-    transition: transform 3.8s linear;
-  }
+  #train-group { transform: translateX(-200px); }
+  #train-group.driving { transform: translateX(1350px); transition: transform 3.8s linear; }
 </style>
 </head>
 <body>
@@ -107,42 +89,20 @@
 
 <div class="canvas-wrap">
 <svg width="100%" height="100%" viewBox="0 0 1300 555" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
-  
-  <rect class="ilock" x="20" y="42" width="238" height="298" rx="3"/>
-  <text class="clbl" x="36" y="350" text-anchor="start" style="font-size:9px;fill:#222;letter-spacing:.12em">INTERLOCKING SYSTEM</text>
-  
-  <rect class="cbox" id="bx-blk" x="38" y="150" width="112" height="36" rx="4"/>
-  <text class="clbl" id="lb-blk" x="94" y="168">גרופ ראשי</text>
-  
-  <rect class="cbox" id="bx-db1" x="170" y="58" width="44" height="260" rx="4"/>
-  <text class="clbl" id="lb-db1" x="192" y="188" transform="rotate(-90,192,188)">DB BOARD</text>
-  
-  <path class="wire" id="w-blk" d="M150 168 H170"/>
-  
-  <rect class="cbox" id="bx-db2" x="355" y="355" width="44" height="148" rx="4"/>
-  <text class="clbl" id="lb-db2" x="377" y="429" transform="rotate(-90,377,429)">DB BOARD</text>
-  
-  <path class="wire" id="w-1" d="M192 318 V430 H355"/>
-  
+  <rect class="ilock" x="20" y="42" width="238" height="298" rx="3"/><text class="clbl" x="36" y="350" text-anchor="start" style="font-size:9px;fill:#222;letter-spacing:.12em">INTERLOCKING SYSTEM</text>
+  <rect class="cbox" id="bx-blk" x="38" y="150" width="112" height="36" rx="4"/><text class="clbl" id="lb-blk" x="94" y="168">גרופ קטע</text>
+  <rect class="cbox" id="bx-db1" x="170" y="58" width="44" height="260" rx="4"/><text class="clbl" id="lb-db1" x="192" y="188" transform="rotate(-90,192,188)">DB BOARD</text>
+  <path class="wire" id="w-blk" d="M150 168 H170"/><path class="wire" id="w-1" d="M192 318 V430 H355"/>
+  <rect class="cbox" id="bx-db2" x="355" y="355" width="44" height="148" rx="4"/><text class="clbl" id="lb-db2" x="377" y="429" transform="rotate(-90,377,429)">DB BOARD</text>
   <rect class="pole" x="1210" y="35" width="7" height="485"/>
-  
-  <rect class="cbox" id="bx-id" x="1191.5" y="285" width="44" height="140" rx="4"/>
-  <text class="clbl" id="lb-id" x="1213.5" y="355" transform="rotate(-90,1213.5,355)">INSERT BOX</text>
-  
+  <rect class="cbox" id="bx-id" x="1191.5" y="285" width="44" height="140" rx="4"/><text class="clbl" id="lb-id" x="1213.5" y="355" transform="rotate(-90,1213.5,355)">INSERT BOX</text>
   <path class="wire" id="w-2" d="M399 430 H1213.5 V425"/>
   <path class="wire" id="w-3" d="M1213.5 285 V160"/>
-  
   <rect class="scase" x="1178" y="40" width="71" height="140" rx="7"/>
-  
   <circle class="lens" id="m-green" cx="1213.5" cy="80" r="21"/>
-  
   <circle class="lens" id="m-red" cx="1213.5" cy="140" r="21"/>
-  
   <text class="clbl" x="1213.5" y="195" style="font-size:10px;">BLOCK SIGNAL</text>
-  
-
   <line x1="0" y1="520" x2="1300" y2="520" stroke="#333" stroke-width="4" stroke-dasharray="24 12" />
-
   <g id="train-group">
     <rect x="0" y="470" width="130" height="35" rx="6" fill="#1d4ed8" stroke="#1e3a8a" stroke-width="2"/>
     <rect x="90" y="478" width="30" height="12" rx="3" fill="#1e1e24" />
@@ -151,19 +111,16 @@
     <circle cx="30" cy="512" r="8" fill="#555" stroke="#111" stroke-width="2"/>
     <circle cx="100" cy="512" r="8" fill="#555" stroke="#111" stroke-width="2"/>
   </g>
-  
 </svg>
 </div>
 
 <div id="controls-panel">
   <button class="control-btn" onclick="prev()">◀ הקודם</button>
   <button class="control-btn" onclick="reset()" style="background:#333;">איפוס ↺</button>
-  
   <div id="caption-text">
-    <div id="caption-title">טוען נתונים...</div>
-    <div id="caption-body">המתן למערכת</div>
+    <div id="caption-title">מצב 0: קטע פנוי</div>
+    <div id="caption-body">המתן להוראה</div>
   </div>
-  
   <button class="control-btn" onclick="next()">הבא ▶</button>
 </div>
 
@@ -187,70 +144,69 @@ function clearAll() {
   ALL_B.forEach(id => { const e = document.getElementById(id); if(e) e.classList.remove('ar','ag'); });
   document.querySelectorAll('.clbl').forEach(e => e.classList.remove('on'));
   ALL_L.forEach(id => { const e = document.getElementById(id); if(e) e.classList.remove('lr','lg'); });
+  document.getElementById('train-group').style.transition = 'none';
+  document.getElementById('train-group').classList.remove('driving');
 }
 
-function W(ids, c) { ids.forEach(id => { const e = document.getElementById(id); if(e) e.classList.add(c); }); }
+function W(ids, c) { ids.forEach(id => { const e = document.getElementById(id); if(e) { e.classList.remove('red','green'); e.classList.add(c); }}); }
 function B(ids, c) {
   const m = { red:'ar', green:'ag' };
   ids.forEach(id => {
-    const e = document.getElementById(id); if(e) e.classList.add(m[c]);
+    const e = document.getElementById(id); if(e) { e.classList.remove('ar','ag'); e.classList.add(m[c]); }
     const lb = document.getElementById(id.replace('bx-','lb-')); if(lb) lb.classList.add('on');
   });
 }
 function L(id, c) {
   const m = { red:'lr', green:'lg' };
-  const e = document.getElementById(id); if(e) e.classList.add(m[c]);
+  const e = document.getElementById(id); if(e) { e.classList.remove('lr','lg'); e.classList.add(m[c]); }
 }
 
-function T(fn, delay) {
-  timeouts.push(setTimeout(fn, delay));
-}
+function T(fn, delay) { timeouts.push(setTimeout(fn, delay)); }
 
 function render() {
   clearAll();
   document.getElementById('step-lbl').textContent = `שלב ${step} / ${TOTAL}`;
   
-  const train = document.getElementById('train-group');
-
   if(step === 0) {
     document.getElementById('caption-title').textContent = 'מצב 0: קטע פנוי — סימנור ירוק';
-    document.getElementById('caption-body').textContent = 'מצב ברירת מחדל. הקטע אחרי הסימנור פנוי .';
+    document.getElementById('caption-body').textContent = 'מצב ברירת מחדל.';
     
-    // איפוס הרכבת לצד שמאל מיד
-    train.style.transition = 'none';
-    train.classList.remove('driving');
-    
-    // בברירת מחדל, השרשרת נבנית לירוק
     T(() => B(['bx-blk'], 'green'), 0);
-    T(() => W(['w-blk'], 'green'), 400);
-    T(() => B(['bx-db1'], 'green'), 800);
-    T(() => W(['w-1'], 'green'), 1200);
-    T(() => B(['bx-db2'], 'green'), 1600);
-    T(() => W(['w-2'], 'green'), 2000);
-    T(() => B(['bx-id'], 'green'), 2400);
-    T(() => W(['w-3'], 'green'), 2800);
-    T(() => L('m-green', 'green'), 3600);
+    T(() => W(['w-blk'], 'green'), 200);
+    T(() => B(['bx-db1'], 'green'), 400);
+    T(() => W(['w-1'], 'green'), 600);
+    T(() => B(['bx-db2'], 'green'), 800);
+    T(() => W(['w-2'], 'green'), 1000);
+    T(() => B(['bx-id'], 'green'), 1200);
+    T(() => W(['w-3'], 'green'), 1400);
+    T(() => L('m-green', 'green'), 1800);
 
   } else if(step === 1) {
     document.getElementById('caption-title').textContent = 'מצב 1: מעבר רכבת — סימנור אדום';
-    document.getElementById('caption-body').textContent = 'הרכבת חולפת על פני הסימנור, שננעל מיד לאדום להגנת הקטע.';
+    document.getElementById('caption-body').textContent = 'הקטע ננעל.';
     
-    // התחלת נסיעת הרכבת
+    // רכבת נוסעת
     setTimeout(() => {
-      train.style.transition = 'transform 3.8s linear';
-      train.classList.add('driving');
+      document.getElementById('train-group').style.transition = 'transform 3.8s linear';
+      document.getElementById('train-group').classList.add('driving');
     }, 50);
-
-    // מתוזמן בדיוק כשהרכבת חוצה את הסימנור הראשי 
-    T(() => B(['bx-blk'], 'red'), 1200);
-    T(() => W(['w-blk'], 'red'), 1500);
-    T(() => B(['bx-db1'], 'red'), 1800);
-    T(() => W(['w-1'], 'red'), 2100);
-    T(() => B(['bx-db2'], 'red'), 2400);
-    T(() => W(['w-2'], 'red'), 2700);
-    T(() => B(['bx-id'], 'red'), 3000);
-    T(() => W(['w-3'], 'red'), 3300);
-    T(() => L('m-red', 'red'), 3700); // ננעל באדום כשהיא עוברת
+    
+    // מפעיל ירוק בבסיס (כמו ברענון)
+    B(ALL_B, 'green'); W(ALL_W, 'green'); L('m-green', 'green');
+    
+    // אדום "רודף" ומשתלט
+    T(() => B(['bx-blk'], 'red'), 1000);
+    T(() => W(['w-blk'], 'red'), 1300);
+    T(() => B(['bx-db1'], 'red'), 1600);
+    T(() => W(['w-1'], 'red'), 1900);
+    T(() => B(['bx-db2'], 'red'), 2200);
+    T(() => W(['w-2'], 'red'), 2500);
+    T(() => B(['bx-id'], 'red'), 2800);
+    T(() => W(['w-3'], 'red'), 3100);
+    T(() => { 
+        document.getElementById('m-green').classList.remove('lg');
+        L('m-red', 'red'); 
+    }, 3200);
   }
 }
 
