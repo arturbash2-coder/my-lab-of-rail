@@ -147,7 +147,7 @@
 
       <path class="wire wire-animate" id="wire-mast-main" d="M 890 350 L 890 165" />
       
-      <path class="wire wire-speed" id="wire-mast-speed" d="M 875 350 L 875 120" />
+      <path class="wire wire-speed" id="wire-mast-speed" d="M 890 350 L 890 120" />
       <path class="wire wire-warning" id="wire-mast-warn" d="M 865 350 L 865 300" />
       
       <path class="wire wire-series" id="wire-series" d="M 890 350 L 915 350 L 905 315 L 890 335 L 875 315 L 890 350" />
@@ -194,7 +194,7 @@
       <rect class="signal-bg" x="865" y="140" width="50" height="125" />
       <circle class="lens green" id="light-green" cx="890" cy="165" r="14" />
       <circle class="lens yellow" id="light-yellow" cx="890" cy="202" r="14" />
-      <circle class="lens red active" id="light-red" cx="890" cy="240" r="14" />
+      <circle class="lens red" id="light-red" cx="890" cy="240" r="14" />
 
       <rect class="signal-bg" x="865" y="275" width="50" height="60" />
       <circle class="lens white" id="warn-left" cx="877" cy="295" r="7" />
@@ -237,7 +237,7 @@
         el.style.filter = '';
       });
       
-      document.getElementById('light-red').classList.add('active');
+      // השורה שהדליקה את האדום ידנית נמחקה מפה
     }
 
     function setYellowWire(id) {
@@ -247,7 +247,6 @@
       el.style.filter = 'drop-shadow(0 0 5px #fbbf24)';
     }
 
-    // פונקציה חדשה שצובעת את החוט באדום ומפעילה אותו
     function setRedWire(id) {
       const el = document.getElementById(id);
       el.classList.add('active');
@@ -265,7 +264,6 @@ if (currentStep === 0) {
         
         document.getElementById('box-main').classList.add('active', 'active-red');
         
-        // כאן הוספתי timeouts כדי שזה יזרום אחד אחרי השני בהדלקה הראשונה:
         timeouts.push(setTimeout(() => setRedWire('wire-main-db'), 200));
         timeouts.push(setTimeout(() => document.getElementById('box-db-top').classList.add('active'), 600));
         timeouts.push(setTimeout(() => setRedWire('wire-db-db'), 900));
@@ -273,6 +271,9 @@ if (currentStep === 0) {
         timeouts.push(setTimeout(() => setRedWire('wire-db-insert'), 1600));
         timeouts.push(setTimeout(() => document.getElementById('box-insert').classList.add('active'), 2000));
         timeouts.push(setTimeout(() => setRedWire('wire-mast-main'), 2400));
+        
+        // תיקון: המנורה האדומה נדלקת רק אחרי שהחוט האחרון הגיע (2400 + 800 של האנימציה)
+        timeouts.push(setTimeout(() => document.getElementById('light-red').classList.add('active'), 2800));
       }
       else if (currentStep === 1) {
         document.getElementById('caption-title').innerText = "מצב 1: אזהרה פעילה (באדום בלבד)";
@@ -280,7 +281,6 @@ if (currentStep === 0) {
         
         document.getElementById('box-main').classList.add('active', 'active-red');
         
-        // משמר את הקו האדום של הסימנור הראשי גם במצב אזהרה
         setRedWire('wire-main-db');
         document.getElementById('box-db-top').classList.add('active');
         setRedWire('wire-db-db');
@@ -289,13 +289,16 @@ if (currentStep === 0) {
         document.getElementById('box-insert').classList.add('active');
         setRedWire('wire-mast-main');
         
+        // תיקון: בשלב 1 החוט הופעל מיד ב-0, אז המנורה צריכה להידלק אחרי 800 שזה הזמן שלוקח לו לעלות
+        timeouts.push(setTimeout(() => document.getElementById('light-red').classList.add('active'), 0));
+        
         document.getElementById('box-calib').classList.add('active');
         document.getElementById('wire-calib-warn').classList.add('active');
         
         timeouts.push(setTimeout(() => document.getElementById('box-warn').classList.add('active'), 400));
         timeouts.push(setTimeout(() => document.getElementById('wire-warn-db').classList.add('active'), 800));
         
-        timeouts.push(setTimeout(() => document.getElementById('wire-mast-warn').classList.add('active'), 1200));
+        
         timeouts.push(setTimeout(() => document.getElementById('wire-series').classList.add('active'), 1200));
         timeouts.push(setTimeout(() => document.getElementById('warn-right').classList.add('active'), 1500));
         timeouts.push(setTimeout(() => document.getElementById('warn-bottom').classList.add('active'), 1800));
