@@ -131,7 +131,7 @@
   <rect class="cbox" id="bx-im" x="1191.5" y="285" width="44" height="140" rx="4"/><text class="clbl" id="lb-im" x="1213.5" y="355" transform="rotate(-90,1213.5,355)">INSERT BOX</text>
   <path class="wire" id="w-5" d="M1213.5 285 V242"/>
   <rect class="scase" x="1178" y="60" width="71" height="182" rx="7"/>
-  <circle class="lens" id="m-green" cx="1213.5" cy="100" r="21"/><circle class="lens" id="m-yellow" cx="1213.5" cy="151" r="21"/><circle class="lens" id="m-red" cx="1213.5" cy="202" r="21"/><text class="clbl" x="1213.5" y="258">MAIN SIGNAL</text>
+  <circle class="lens" id="m-red" cx="1213.5" cy="100" r="21"/><circle class="lens" id="m-yellow" cx="1213.5" cy="151" r="21"/><circle class="lens" id="m-green" cx="1213.5" cy="202" r="21"/><text class="clbl" x="1213.5" y="258">MAIN SIGNAL</text>
 </svg>
 </div>
 
@@ -154,7 +154,15 @@ const ALL_W = ['w-gd','w-gm','w-1','w-2a','w-2b','w-3','w-4','w-5'];
 const ALL_B = ['bx-gd','bx-gm','bx-db1','bx-db2','bx-id','bx-db3','bx-im'];
 const ALL_L = ['d-top-y','d-top-g','d-bot-y','d-bot-g','m-red','m-yellow','m-green'];
 
+let timeouts = [];
+
+function clearAllTimeouts() {
+  timeouts.forEach(t => clearTimeout(t));
+  timeouts = [];
+}
+
 function clearAll() {
+  clearAllTimeouts();
   ALL_W.forEach(id => { const e = document.getElementById(id); if(e) e.classList.remove('red','yellow','green'); });
   ALL_B.forEach(id => { const e = document.getElementById(id); if(e) e.classList.remove('ar','ay','ag'); });
   document.querySelectorAll('.clbl').forEach(e => e.classList.remove('on'));
@@ -174,22 +182,60 @@ function L(id, c) {
   const e = document.getElementById(id); if(e) e.classList.add(m[c]);
 }
 
+// פונקציית עזר להפעלת טיימרים בצורה מסודרת
+function T(fn, delay) {
+  timeouts.push(setTimeout(fn, delay));
+}
+
 function render() {
   clearAll();
   document.getElementById('step-lbl').textContent = `שלב ${step} / ${TOTAL}`;
+  
+  let c = step === 0 ? 'red' : step === 1 ? 'yellow' : 'green';
+
   if(step === 0) {
     document.getElementById('caption-title').textContent = 'מצב 0: ראשי אדום — עצור בראשי';
     document.getElementById('caption-body').textContent = 'ראשי: אדום. מוקדם מתריע עם אלכסון כתום.';
-    W(ALL_W, 'red'); B(ALL_B, 'red'); L('m-red', 'red'); L('d-top-y', 'yellow'); L('d-bot-y', 'yellow');
   } else if(step === 1) {
     document.getElementById('caption-title').textContent = 'מצב 1: ראשי צהוב — התכונן לעקלתון';
     document.getElementById('caption-body').textContent = 'ראשי: צהוב. מוקדם מאותת על עקלתון.';
-    W(ALL_W, 'yellow'); B(ALL_B, 'yellow'); L('m-yellow', 'yellow'); L('d-top-g', 'green'); L('d-bot-y', 'yellow');
   } else if(step === 2) {
     document.getElementById('caption-title').textContent = 'מצב 2: ראשי ירוק — בראשי סע';
     document.getElementById('caption-body').textContent = 'המסלול פתוח. ראשי: ירוק. מוקדם מתריע על מעבר בראשי.';
-    W(ALL_W, 'green'); B(ALL_B, 'green'); L('m-green', 'green'); L('d-top-g', 'green'); L('d-bot-g', 'green');
   }
+
+  // --- שלב 1: פקודה יוצאת לסימנור הראשי ---
+  T(() => B(['bx-gm'], c), 0);
+  T(() => W(['w-gm'], c), 200);
+  T(() => B(['bx-db1'], c), 400);
+  T(() => W(['w-1'], c), 600);
+  T(() => B(['bx-db2'], c), 800);
+  T(() => W(['w-2b'], c), 1000);
+  T(() => B(['bx-db3'], c), 1200);
+  T(() => W(['w-4'], c), 1400);
+  T(() => B(['bx-im'], c), 1600);
+  T(() => W(['w-5'], c), 1800);
+
+  // --- שלב 2: נורת הסימנור הראשי נדלקת ---
+  T(() => {
+    if(step === 0) L('m-red', 'red');
+    if(step === 1) L('m-yellow', 'yellow');
+    if(step === 2) L('m-green', 'green');
+  }, 2200);
+
+  // --- שלב 3: לאחר שהראשי נדלק, פקודה יוצאת למוקדם ---
+  T(() => B(['bx-gd'], c), 2800);
+  T(() => W(['w-gd'], c), 3000);
+  T(() => W(['w-2a'], c), 3200);
+  T(() => B(['bx-id'], c), 3400);
+  T(() => W(['w-3'], c), 3600);
+
+  // --- שלב 4: המוקדם נדלק ומשקף את החיווי ---
+  T(() => {
+    if(step === 0) { L('d-top-y', 'yellow'); L('d-bot-y', 'yellow'); }
+    if(step === 1) { L('d-top-g', 'green'); L('d-bot-y', 'yellow'); }
+    if(step === 2) { L('d-top-g', 'green'); L('d-bot-g', 'green'); }
+  }, 4000);
 }
 
 function next() { if(step < TOTAL) { step++; render(); } }
