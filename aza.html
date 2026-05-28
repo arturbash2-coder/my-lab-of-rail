@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>מעבדה דיגיטלית - מוני צירים (Axle Counters)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap');
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: #111111;
+      font-family: 'Heebo', sans-serif;
+      color: #e8e2d8;
+      min-height: 100vh;
+      overflow: hidden;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .grid-bg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background-image: linear-gradient(to right, #222 1px, transparent 1px), linear-gradient(to bottom, #222 1px, transparent 1px);
+      background-size: 20px 20px; z-index: -1;
+    }
+
+    #header {
+      position: fixed; top: 0; left: 0; right: 0; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; background: #1a1a1e90; backdrop-filter: blur(8px);
+      border-bottom: 0.5px solid #ffffff15; z-index: 100;
+    }
+    
+    .nav-back { color: #4ade80; text-decoration: none; font-weight: bold; font-size: 14px; flex: 1; font-family: 'Courier New', monospace; }
+    #logo { font-size: 12px; font-weight: 700; color: #4ade80; text-transform: uppercase; flex: 1; text-align: center; font-family: 'DM Mono', monospace; }
+    #step-counter { font-size: 12px; color: #7a7870; flex: 1; text-align: left; font-family: 'DM Mono', monospace; }
+
+    .canvas-wrap {
+      position: absolute; top: 60px; bottom: 100px; left: 0; right: 0;
+      z-index: 1; display: flex; align-items: center; justify-content: center;
+      padding: 10px;
+    }
+    
+    svg { width: 100%; height: 100%; max-width: 1200px; }
+
+    #controls-panel {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      width: 95%; max-width: 900px;
+      display: flex; flex-direction: row; gap: 15px;
+      background: #1a1a1ee0; border: 1px solid #333; border-radius: 8px;
+      padding: 15px 25px; backdrop-filter: blur(10px); z-index: 100; align-items: center;
+    }
+
+    .control-btn {
+      background: #2a2a2e; border: 1px solid #444; color: #fff;
+      padding: 8px 16px; border-radius: 6px; font-family: 'Heebo', sans-serif; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .control-btn:hover { background: #4ade80; color: #111; border-color: #4ade80; }
+    .control-btn:active { transform: scale(0.95); }
+
+    #caption-text { flex-grow: 1; text-align: center; }
+    #caption-title { font-size: 15px; font-weight: 700; color: #4ade80; margin-bottom: 4px; }
+    #caption-body { font-size: 13px; color: #ccc; }
+
+    @media (max-width: 768px) {
+      .canvas-wrap { bottom: 140px; }
+      #controls-panel { bottom: 15px; padding: 12px 15px; flex-wrap: wrap; gap: 10px; }
+      #caption-text { order: -1; width: 100%; margin-bottom: 5px; }
+      .control-btn { flex: 1; padding: 10px 5px; font-size: 12px; text-align: center; }
+    }
+
+    /* קווים ועיצוב */
+    .wire { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.4s, filter 0.4s; }
+    
+    /* תקשורת (BUS) - אנימציה מקווקוות */
+    .flow-green { stroke: #4ade80; stroke-dasharray: 10 10; animation: flowAnim 0.6s linear infinite; filter: drop-shadow(0 0 5px rgba(74,222,128,0.6)); }
+    .flow-red { stroke: #ef4444; stroke-dasharray: 10 10; animation: flowAnim 0.6s linear infinite; filter: drop-shadow(0 0 5px rgba(239,68,68,0.8)); }
+    
+    /* קווי מתח (POWER) - צבע מלא, ללא קווקוו או אנימציה */
+    .flow-pwr1 { stroke: #fbbf24; filter: drop-shadow(0 0 5px rgba(251,191,36,0.6)); } /* צהוב */
+    .flow-pwr2 { stroke: #06b6d4; filter: drop-shadow(0 0 5px rgba(6,182,212,0.6)); } /* תכלת */
+    .flow-pwr3 { stroke: #f8fafc; filter: drop-shadow(0 0 5px rgba(248,250,252,0.6)); } /* לבן */
+
+    @keyframes flowAnim { from { stroke-dashoffset: 20; } to { stroke-dashoffset: 0; } }  
+
+    /* קופסאות וחיווי צבע */
+    .box { fill: #1e1e24; stroke: #444; stroke-width: 2; rx: 6; transition: all 0.4s; }
+    
+    .box-green { stroke: #4ade80; fill: #112a18; }
+    .box-red { stroke: #ef4444; fill: #331111; }
+    .box-yellow { stroke: #fbbf24; fill: #332a11; }
+    
+    .box-text { font-size: 13px; fill: #ccc; text-anchor: middle; dominant-baseline: middle; font-weight: 700; transition: fill 0.3s; }
+    .text-active { fill: #fff; }
+
+    /* מסגרת האינטרלוקינג */
+    .interlocking-box { fill: none; stroke: #555; stroke-width: 1.5; stroke-dasharray: 8 4; rx: 4; }
+    .interlocking-text { fill: #888; font-size: 14px; font-family: 'DM Mono'; font-weight: bold; letter-spacing: 1px; }
+
+    /* מסילה */
+    .rail-track { stroke: #555; stroke-width: 4; transition: stroke 0.4s, filter 0.4s; }
+    .rail-ties { stroke: #333; stroke-width: 12; stroke-dasharray: 4 20; }
+    
+    .track-green { stroke: #4ade80; filter: drop-shadow(0 0 6px #4ade80); }
+    .track-red { stroke: #ef4444; filter: drop-shadow(0 0 6px #ef4444); }
+
+    /* ציר הרכבת */
+    #train-axle { transition: transform 1.2s ease-in-out; }
+  </style>
+</head>
+<body>
+
+  <div class="grid-bg"></div>
+
+  <div id="header">
+    <a href="#" class="nav-back">← חזרה למעבדות</a>
+    <div id="logo">LAB / AZA AXLE COUNTERS</div>
+    <div id="step-counter">שלב 0 / 3</div>
+  </div>
+
+  <div class="canvas-wrap">
+    <svg viewBox="0 0 1150 550" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      
+      <rect class="interlocking-box" x="20" y="30" width="370" height="400" />
+      <text class="interlocking-text" x="35" y="55">INTERLOCKING</text>
+      <text class="interlocking-text" x="420" y="55">FIELD</text>
+
+      <path class="wire obj-bus" id="wire-aza1" d="M 90 140 L 90 200" />
+      <path class="wire obj-bus" id="wire-aza2" d="M 110 140 L 110 200" />
+
+      <path class="wire obj-bus" id="wire-mod-tx" d="M 150 220 L 170 220 L 170 110 L 190 110" />
+      <path class="wire obj-bus" id="wire-mod-rx" d="M 150 240 L 190 240" />
+
+      <path class="wire obj-bus" id="wire-tx-db" d="M 290 110 L 330 110" />
+      <path class="wire obj-bus" id="wire-rx-db" d="M 290 240 L 330 240" />
+
+      <path class="wire obj-pwr1" id="wire-dc-fuse" d="M 150 350 L 190 350" />
+      
+      <path class="wire obj-pwr1" id="wire-fuse-db1" d="M 290 335 L 330 335" />
+      <path class="wire obj-pwr2" id="wire-fuse-db2" d="M 290 350 L 330 350" />
+      <path class="wire obj-pwr3" id="wire-fuse-db3" d="M 290 365 L 330 365" />
+
+      <path class="wire obj-pwr1" id="wire-pwr-d1" d="M 360 110 L 520 110 L 520 150" />          
+      <path class="wire obj-pwr2" id="wire-pwr-d2" d="M 360 95 L 770 95 L 770 150" />
+      <path class="wire obj-pwr3" id="wire-pwr-d3" d="M 360 80 L 1020 80 L 1020 150" />
+
+      <path class="wire obj-bus-s1" id="wire-bus-out" d="M 360 180 L 470 180" />
+      <path class="wire obj-bus-s2" id="wire-bus-1to2" d="M 570 180 L 720 180" />
+      <path class="wire obj-bus-s3" id="wire-bus-2to3" d="M 820 180 L 970 180" />
+
+      <path class="wire obj-bus-s1" id="wire-data-ax1" d="M 520 210 L 520 435" />
+      <path class="wire obj-bus-s2" id="wire-data-ax2" d="M 770 210 L 770 435" />
+      <path class="wire obj-bus-s3" id="wire-data-ax3" d="M 1020 210 L 1020 435" />
+
+      <rect class="box obj-bus-box" id="box-aza" x="50" y="80" width="100" height="60" />
+      <text class="box-text text-active" x="100" y="110">AZA</text>
+
+      <rect class="box obj-bus-box" id="box-modem" x="50" y="200" width="100" height="60" />
+      <text class="box-text text-active" x="100" y="230">MODEM</text>
+
+      <rect class="box obj-pwr-box" id="box-dcdc" x="50" y="320" width="100" height="60" />
+      <text class="box-text text-active" x="100" y="350">DC-DC</text>
+
+      <rect class="box obj-bus-box" id="box-tx" x="190" y="80" width="100" height="60" />
+      <text class="box-text text-active" x="240" y="110">NFLU TX</text>
+
+      <rect class="box obj-bus-box" id="box-rx" x="190" y="210" width="100" height="60" />
+      <text class="box-text text-active" x="240" y="240">NFLU RX</text>
+
+      <rect class="box obj-pwr-box" id="box-fuse" x="190" y="320" width="100" height="60" />
+      <text class="box-text text-active" x="240" y="350">FUSE HOLDER</text>
+
+      <rect class="box obj-bus-box" id="box-db" x="330" y="70" width="30" height="310" />
+      <text class="box-text text-active" transform="rotate(-90, 345, 225)" x="345" y="225">DB BOARD</text>
+
+      <rect class="box obj-bus-s1-box" id="box-ins1" x="470" y="150" width="100" height="60" />
+      <text class="box-text text-active" x="520" y="180">INSERT 1</text>
+
+      <rect class="box obj-bus-s2-box" id="box-ins2" x="720" y="150" width="100" height="60" />
+      <text class="box-text text-active" x="770" y="180">INSERT 2</text>
+
+      <rect class="box obj-bus-s3-box" id="box-ins3" x="970" y="150" width="100" height="60" />
+      <text class="box-text text-active" x="1020" y="180">INSERT 3</text>
+
+      <path class="rail-ties" d="M 410 450 L 1150 450" />
+      
+      <path class="rail-track obj-track0" id="trk-0" d="M 410 450 L 520 450" />
+      <path class="rail-track obj-track1" id="trk-1" d="M 520 450 L 770 450" />
+      <path class="rail-track obj-track2" id="trk-2" d="M 770 450 L 1020 450" />
+      <path class="rail-track obj-track3" id="trk-3" d="M 1020 450 L 1150 450" />
+
+      <rect class="box obj-bus-s1-box" id="box-ax1-l" x="490" y="435" width="30" height="30" rx="3" />
+      <rect class="box obj-bus-s1-box" id="box-ax1-r" x="520" y="435" width="30" height="30" rx="3" />
+      <text class="box-text text-active" x="520" y="450" style="font-size:10px; pointer-events: none;">AXLE 1</text>
+
+      <rect class="box obj-bus-s2-box" id="box-ax2-l" x="740" y="435" width="30" height="30" rx="3" />
+      <rect class="box obj-bus-s2-box" id="box-ax2-r" x="770" y="435" width="30" height="30" rx="3" />
+      <text class="box-text text-active" x="770" y="450" style="font-size:10px; pointer-events: none;">AXLE 2</text>
+
+      <rect class="box obj-bus-s3-box" id="box-ax3-l" x="990" y="435" width="30" height="30" rx="3" />
+      <rect class="box obj-bus-s3-box" id="box-ax3-r" x="1020" y="435" width="30" height="30" rx="3" />
+      <text class="box-text text-active" x="1020" y="450" style="font-size:10px; pointer-events: none;">AXLE 3</text>
+
+      <g id="train-axle" transform="translateX(420px)">
+        <rect x="0" y="425" width="40" height="15" fill="#666" rx="4"/>
+        <circle cx="5" cy="450" r="10" fill="#e2e8f0" stroke="#333" stroke-width="3"/>
+        <circle cx="35" cy="450" r="10" fill="#e2e8f0" stroke="#333" stroke-width="3"/>
+      </g>
+
+    </svg>
+  </div>
+
+  <div id="controls-panel">
+    <button class="control-btn" onclick="prevStep()">◀ הקודם</button>
+    <button class="control-btn" onclick="resetSystem()" style="background: #333;">איפוס ↺</button>
+    
+    <div id="caption-text">
+      <div id="caption-title">מצב 0: מקטע ראשון תפוס (דיפולט)</div>
+      <div id="caption-body">הזנת מתח נפרדת ללא קווקוו (למעלה). ה-BUS נכנס למרכז ה-Inserts. המקטע הראשון אדום.</div>
+    </div>
+    
+    <button class="control-btn" onclick="nextStep()">הבא ▶</button>
+  </div>
+
+  <script>
+    let currentStep = 0;
+    const totalSteps = 3;
+
+    function setGroupClass(selector, className) {
+      document.querySelectorAll(selector).forEach(el => {
+        el.classList.remove('flow-green', 'flow-red', 'flow-pwr1', 'flow-pwr2', 'flow-pwr3', 'box-green', 'box-red', 'box-yellow', 'track-green', 'track-red');
+        if (className) el.classList.add(className);
+      });
+    }
+
+    // פונקציית עזר להחלפת מחלקה בטוחה בלי לפגוע במערך הבסיס
+    function replaceClass(id, oldClass, newClass) {
+      const el = document.getElementById(id);
+      if (el) el.classList.replace(oldClass, newClass);
+    }
+
+    function updateState() {
+      document.getElementById('step-counter').innerText = `שלב ${currentStep} / ${totalSteps}`;
+
+      // איפוס גורף למערכת (ירוק כברירת מחדל)
+      setGroupClass('.wire', '');
+      setGroupClass('.box', '');
+      setGroupClass('.rail-track', 'track-green');
+
+      // דיפולט BUS (ירוק)
+      setGroupClass('.obj-bus, .obj-bus-s1, .obj-bus-s2, .obj-bus-s3', 'flow-green');
+      setGroupClass('.obj-bus-box, .obj-bus-s1-box, .obj-bus-s2-box, .obj-bus-s3-box', 'box-green');
+      
+      // מתח קבוע (ללא אנימציה)
+      setGroupClass('.obj-pwr1', 'flow-pwr1'); 
+      setGroupClass('.obj-pwr2', 'flow-pwr2'); 
+      setGroupClass('.obj-pwr3', 'flow-pwr3'); 
+      setGroupClass('.obj-pwr-box', 'box-yellow'); 
+
+      const train = document.getElementById('train-axle');
+
+      if (currentStep === 0) {
+        document.getElementById('caption-title').innerText = "מצב 0: מקטע ראשון תפוס (דיפולט)";
+        document.getElementById('caption-body').innerText = "הרכבת ממוקמת לפני Axle 1. מקטע TRK-0 אדום ותופס רק את החצי השמאלי של AXLE 1.";
+        
+        train.style.transform = "translate(420px, 0)";
+        
+        replaceClass('box-ins1', 'box-green', 'box-red');
+        replaceClass('box-ax1-l', 'box-green', 'box-red'); // חצי שמאלי אדום
+        // חצי ימני נשאר ירוק (box-green) כברירת מחדל
+        
+        ['wire-bus-out', 'wire-data-ax1'].forEach(id => replaceClass(id, 'flow-green', 'flow-red'));
+        replaceClass('trk-0', 'track-green', 'track-red');
+      }
+      else if (currentStep === 1) {
+        document.getElementById('caption-title').innerText = "שלב 1: ציר נכנס למקטע שבין 1 ל-2";
+        document.getElementById('caption-body').innerText = "הרכבת עברה את מונה 1 ונמצאת בתוך בלוק המסילה האמצעי. החצי הימני של AXLE 1 והחצי השמאלי של AXLE 2 אדומים.";
+        
+        train.style.transform = "translate(600px, 0)"; 
+
+        ['box-ins1', 'box-ins2', 'box-ax1-r', 'box-ax2-l'].forEach(id => replaceClass(id, 'box-green', 'box-red'));
+        // חצי שמאלי של 1 וחצי ימני של 2 נשארים ירוקים
+        
+        ['wire-bus-1to2', 'wire-data-ax1', 'wire-data-ax2'].forEach(id => replaceClass(id, 'flow-green', 'flow-red'));
+        replaceClass('trk-1', 'track-green', 'track-red');
+      }
+      else if (currentStep === 2) {
+        document.getElementById('caption-title').innerText = "שלב 2: ציר עובר למקטע שבין 2 ל-3";
+        document.getElementById('caption-body').innerText = "מקטע 1 משתחרר לחלוטין (ירוק). הרכבת בין מונים 2 ל-3, לכן החצי הימני של AXLE 2 והחצי השמאלי של AXLE 3 אדומים.";
+        
+        train.style.transform = "translate(850px, 0)"; 
+
+        ['box-ins2', 'box-ins3', 'box-ax2-r', 'box-ax3-l'].forEach(id => replaceClass(id, 'box-green', 'box-red'));
+        
+        ['wire-bus-2to3', 'wire-data-ax2', 'wire-data-ax3'].forEach(id => replaceClass(id, 'flow-green', 'flow-red'));
+        replaceClass('trk-2', 'track-green', 'track-red');
+      }
+      else if (currentStep === 3) {
+        document.getElementById('caption-title').innerText = "שלב 3: הרכבת יצאה מהמקטע הפנימי";
+        document.getElementById('caption-body').innerText = "הרכבת עזבה את AXLE 3. חציו הימני נצבע באדום יחד עם קו היציאה (TRK-3), בעוד חציו השמאלי ומקטע TRK-2 משוחררים וחוזרים לירוק.";
+        
+        train.style.transform = "translate(1100px, 0)"; 
+
+        ['box-ins3', 'box-ax3-r'].forEach(id => replaceClass(id, 'box-green', 'box-red'));
+        // חצי שמאלי של AXLE 3 נשאר ירוק!
+        
+        ['wire-data-ax3'].forEach(id => replaceClass(id, 'flow-green', 'flow-red'));
+        replaceClass('trk-3', 'track-green', 'track-red');
+      }
+    }
+
+    function nextStep() {
+      if (currentStep < totalSteps) {
+        currentStep++;
+        updateState();
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        updateState();
+      }
+    }
+
+    function resetSystem() {
+      currentStep = 0;
+      updateState();
+    }
+
+    // הפעלה ראשונית
+    updateState();
+  </script>
+</body>
+</html>
