@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="he" dir="ltr">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -17,14 +17,30 @@
             margin: 0;
             padding: 20px;
         }
-        h2 { color: #4488EE; margin-bottom: 20px; }
+        
+        h2 { 
+            color: #4488EE; 
+            margin-bottom: 30px; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
         .nav-menu {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
+            flex-direction: row; /* מעמיד את העמודות אחת ליד השנייה */
+            gap: 20px; /* רווח בין העמודה הימנית לשמאלית */
             width: 100%;
-            max-width: 350px;
+            max-width: 750px; /* הורחב כדי להכיל שתי עמודות בנוחות */
+            justify-content: center;
         }
+
+        .nav-col {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* רווח בין הכפתורים בתוך אותה עמודה */
+            flex: 1; /* מוודא ששתי העמודות באותו רוחב בדיוק - סימטריה מושלמת */
+        }
+
         .btn {
             background-color: #1e1e1e;
             color: white;
@@ -36,10 +52,23 @@
             font-weight: bold;
             border: 2px solid #4488EE;
             transition: all 0.2s;
+            height: 100%; /* שומר על גובה אחיד לכפתורים */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
         .btn:active {
             background-color: #4488EE;
             transform: scale(0.98);
+        }
+
+        /* התאמה למסכים קטנים (טלפונים ניידים) */
+        @media (max-width: 650px) {
+            .nav-menu {
+                flex-direction: column; /* מחזיר לעמודה אחת במסך קטן */
+                max-width: 350px;
+            }
         }
     </style>
 </head>
@@ -48,14 +77,18 @@
     <h2>Railway Lab Control</h2>
 
     <nav class="nav-menu">
-        <a href="main.html" class="btn">Main Signal</a>
-        <a href="distancev2.html" class="btn">Distance + Main Signal</a>
-        <a href="shunting.html" class="btn">Shunting Signal</a>
-        <a href="block.html" class="btn">Block</a>
-        <a href="aza.html" class="btn">AZA Axle Counter</a>
-        <a href="azlm.html" class="btn">AZLM Axle Counter</a>
-
         
+        <div class="nav-col">
+            <a href="main.html" class="btn">Main Signal</a>
+            <a href="distancev2.html" class="btn">Distance + Main Signal</a>
+            <a href="shunting.html" class="btn">Shunting Signal</a>
+            </div>
+
+        <div class="nav-col">
+            <a href="block.html" class="btn">Block</a>
+            <a href="aza.html" class="btn">AZA Axle Counter</a>
+            <a href="azlm.html" class="btn">AZLM Axle Counter</a>
+            </div>
 
     </nav>
 
