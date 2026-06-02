@@ -113,10 +113,10 @@
       <text x="270" y="290" fill="#fbbf24" font-family="Heebo" font-size="14" font-weight="bold" text-anchor="middle">פאנל ביקורת</text>
       
       <circle cx="230" cy="330" r="10" class="led led-straight active" id="led-straight" />
-      <text x="230" y="360" class="box-text" style="font-size: 12px;">ישר (שמאל)</text>
+      <text x="230" y="360" class="box-text" style="font-size: 12px;">ישר (ימין)</text>
       
       <circle cx="310" cy="330" r="10" class="led led-diverging" id="led-diverging" />
-      <text x="310" y="360" class="box-text" style="font-size: 12px;">עקלתון (ימין)</text>
+      <text x="310" y="360" class="box-text" style="font-size: 12px;">עקלתון (שמאל)</text>
     </g>
 
     <g id="group-turnout">
@@ -191,14 +191,14 @@
   </svg>
 
   <div id="controls-panel">
-    <button id="btn-straight" class="control-btn active-btn" onclick="setRoute('straight')">הצב לישר (שמאל) ◀</button>
+    <button id="btn-straight" class="control-btn active-btn" onclick="setRoute('straight')">הצב לישר (ימין) ◀</button>
     
     <div id="caption-text">
       <div id="caption-title">מסוט נעול - ישר</div>
       <div id="caption-body">המחט העליונה צמודה והתחתונה פתוחה עם רווח. מסלול הגלגל נקי לנסיעה ישרה.</div>
     </div>
     
-    <button id="btn-diverging" class="control-btn" onclick="setRoute('diverging')">הצב לעקלתון (ימין) ▶</button>
+    <button id="btn-diverging" class="control-btn" onclick="setRoute('diverging')">הצב לעקלתון (שמאל) ▶</button>
   </div>
 
   <script>
@@ -227,7 +227,7 @@
         document.querySelectorAll('.led, .route-glow').forEach(el => el.classList.remove('active'));
         resetWires();
 
-        document.getElementById('caption-title').innerText = direction === 'straight' ? "מייצב לישר (שמאל)..." : "מייצב לעקלתון (ימין)...";
+        document.getElementById('caption-title').innerText = direction === 'straight' ? "מייצב לישר (ימין)..." : "מייצב לעקלתון (שמאל)...";
         document.getElementById('caption-body').innerText = "אובדן ביקורת: הפיקוד שולח מתח מהאינטרלוקינג למנוע המסוט בשטח.";
         
         document.getElementById('box-turnout').classList.add('active');
@@ -251,7 +251,7 @@
             }
 
             setTimeout(() => {
-                document.getElementById('caption-title').innerText = direction === 'straight' ? "מסוט נעול - ישר (שמאל)" : "מסוט נעול - עקלתון (ימין)";
+                document.getElementById('caption-title').innerText = direction === 'straight' ? "מסוט נעול - ישר (ימין)" : "מסוט נעול - עקלתון (שמאל)";
                 document.getElementById('caption-body').innerText = "המחט נצמדה בהצלחה. הביקורת חוזרת לפאנל, והנתיב בטוח ומואר.";
                 
                 document.querySelectorAll('.wire-cmd').forEach(el => el.classList.remove('active'));
