@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>מעבדה דיגיטלית - מסוט רכבת (עקלתון עליון)</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #121212; user-select: none; }
+    
+    .grid-bg {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image: 
+        linear-gradient(to right, #222 1px, transparent 1px),
+        linear-gradient(to bottom, #222 1px, transparent 1px);
+      background-size: 20px 20px;
+      z-index: -1;
+    }
+
+    /* ההאדר המקורי שלנו */
+    #header {
+      position: fixed; top: 0; left: 0; right: 0; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; background: #1a1a1e90; backdrop-filter: blur(8px);
+      border-bottom: 0.5px solid #ffffff15; z-index: 100;
+    }
+    .nav-back { color: #4ade80; text-decoration: none; font-weight: bold; font-size: 14px; flex: 1; font-family: 'Heebo', sans-serif; }
+    #logo { font-size: 14px; font-weight: 700; color: #4ade80; text-transform: uppercase; text-align: center; flex: 1; font-family: 'DM Mono', monospace; letter-spacing: 1px;}
+    .header-spacer { flex: 1; }
+
+    #controls-panel {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 20px; background: #1a1a1ee0;
+      border: 1px solid #333; border-radius: 8px; padding: 15px 25px;
+      backdrop-filter: blur(10px); z-index: 100; align-items: center;
+    }
+
+    .control-btn {
+      background: #2a2a2e; border: 1px solid #444; color: #fff;
+      padding: 10px 20px; border-radius: 6px; font-family: 'Heebo', sans-serif; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; font-size: 14px;
+    }
+    .control-btn:hover { background: #4ade80; color: #111; border-color: #4ade80; }
+    .control-btn:active { transform: scale(0.95); }
+    .control-btn.active-btn { background: #4ade80; color: #111; border-color: #4ade80; cursor: default;}
+
+    #caption-text { min-width: 360px; text-align: center; font-family: 'Heebo', sans-serif; }
+    #caption-title { font-size: 15px; font-weight: 700; color: #4ade80; margin-bottom: 4px; }
+    #caption-body { font-size: 13px; color: #ccc; }
+
+    /* קופסאות המערכת */
+    .box { fill: #1e1e24; stroke: #555; stroke-width: 2; transition: all 0.3s; }
+    .box.active { stroke: #fbbf24; fill: #332d19; }
+    .box-text { font-size: 14px; fill: #ccc; text-anchor: middle; dominant-baseline: middle; font-weight: 700; font-family: 'Heebo', sans-serif;}
+    .box.active ~ .box-text { fill: #fff; }
+
+    /* גידים וכבלי זרם */
+    .wire { stroke: #333; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .wire-animate { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 2000; stroke-dashoffset: 2000; opacity: 0; }
+    
+    .wire-cmd { stroke: #fbbf24; filter: drop-shadow(0 0 5px #fbbf24); transition: stroke-dashoffset 0.8s linear, opacity 0.1s; }
+    .wire-feedback { stroke: #4ade80; filter: drop-shadow(0 0 5px #4ade80); transition: stroke-dashoffset 0.8s linear, opacity 0.1s; }
+    
+    .wire-animate.active { stroke-dashoffset: 0; opacity: 1; }
+    .wire-label { fill: #aaa; font-family: 'Heebo', sans-serif; font-size: 16px; font-weight: 700; text-anchor: middle; background: #121212;}
+
+    /* פאנל אינדיקציות */
+    .led { fill: #222; stroke: #444; stroke-width: 2; transition: all 0.4s; }
+    .led-straight.active { fill: #4ade80; stroke: #4ade80; filter: drop-shadow(0 0 8px #4ade80); }
+    .led-diverging.active { fill: #eab308; stroke: #eab308; filter: drop-shadow(0 0 8px #eab308); }
+
+    /* תשתית מסילות ומחטים (עקלתון עליון) */
+    .rail-fixed { stroke: #3a3a40; stroke-width: 7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    
+    /* תאורת נתיבים */
+    .route-glow { stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 0.6s ease-in-out, stroke 0.4s; fill: none; stroke-width: 30; stroke-linecap: round; opacity: 0.15;}
+    .route-glow.active { stroke-dashoffset: 0; stroke: #4ade80; filter: drop-shadow(0 0 8px #4ade80); }
+
+    /* מכניקת המחטים - צירי סיבוב מדויקים בקצוות המסילה הימניים */
+    .blade-top { stroke: #888; stroke-width: 6; fill: none; stroke-linecap: round; transform-origin: 1050px 260px; transition: transform 0.6s ease-in-out; }
+    .blade-bot { stroke: #888; stroke-width: 6; fill: none; stroke-linecap: round; transform-origin: 1050px 280px; transition: transform 0.6s ease-in-out; }
+    
+    /* מוטות מנוע המסוט */
+    .rod { stroke-width: 4; stroke-linecap: round; transition: transform 0.6s ease-in-out; }
+    .rod-det-top { stroke: #3b82f6; } /* מוט כחול */
+    .rod-det-bot { stroke: #22c55e; } /* מוט ירוק */
+    .rod-crossbar { stroke: #666; stroke-width: 3; transition: transform 0.6s ease-in-out; }
+
+    /* תנועה למצב עקלתון */
+    .diverging .blade-top { transform: rotate(-6.89deg); }
+    .diverging .blade-bot { transform: rotate(-6.89deg); }
+    .diverging .rod-crossbar, .diverging .rod { transform: translateY(12px); }
+
+  </style>
+</head>
+<body>
+
+  <div class="grid-bg"></div>
+
+  <div id="header">
+    <a href="index.html" class="nav-back">◀ חזור לראשי</a>
+    <div id="logo">LAB / מסוט עקלתון עליון</div>
+    <div class="header-spacer"></div>
+  </div>
+
+  <svg width="100%" height="100vh" viewBox="0 0 1500 800" style="margin-top: 60px;">
+    
+    <rect x="130" y="50" width="380" height="380" fill="#1a1a1e30" stroke="#666" stroke-width="2" stroke-dasharray="12 12" />
+    <text x="145" y="75" fill="#666" font-family="Heebo" font-size="16" font-weight="bold">INTERLOCKING</text>
+
+    <g id="group-panel">
+      <rect x="190" y="260" width="160" height="120" rx="8" class="box" style="fill: #15151a; stroke: #444;" />
+      <text x="270" y="290" fill="#fbbf24" font-family="Heebo" font-size="14" font-weight="bold" text-anchor="middle">פאנל ביקורת</text>
+      
+      <circle cx="230" cy="330" r="10" class="led led-straight active" id="led-straight" />
+      <text x="230" y="360" class="box-text" style="font-size: 12px;">ישר (שמאל)</text>
+      
+      <circle cx="310" cy="330" r="10" class="led led-diverging" id="led-diverging" />
+      <text x="310" y="360" class="box-text" style="font-size: 12px;">עקלתון (ימין)</text>
+    </g>
+
+    <g id="group-turnout">
+      <rect id="box-turnout" x="190" y="92" width="120" height="90" rx="13.5" class="box" />
+      <text x="250" y="137" class="box-text">גרופ מסוט</text>
+    </g>
+
+    <g id="group-db1">
+      <rect id="box-db1" x="400" y="100" width="60" height="120" rx="9" class="box" />
+      <text x="430" y="160" class="box-text" transform="rotate(-90, 430, 160)">DB BOARD</text>
+    </g>
+
+    <line x1="570" y1="20" x2="570" y2="720" stroke="#555" stroke-width="2" stroke-dasharray="8 8" />
+    <text x="590" y="40" fill="#666" font-family="Heebo" font-size="16" font-weight="bold" letter-spacing="2">שטח (FIELD)</text>
+
+    <g id="group-db2">
+      <rect id="box-db2" x="660" y="270" width="70" height="160" rx="10.5" class="box" />
+      <text x="695" y="350" class="box-text" transform="rotate(-90, 695, 350)">DB BOARD</text>
+    </g>
+
+    <g id="group-motor">
+      <rect id="box-motor" x="900" y="460" width="160" height="80" rx="6" class="box" />
+      <text x="980" y="500" class="box-text" style="font-size: 16px;">מנוע מסוט</text>
+    </g>
+
+    <g id="wiring">
+        <path d="M 310 115 L 400 115" class="wire" />
+        <path d="M 310 115 L 400 115" class="wire-animate wire-cmd" id="wire-cmd-1" />
+        
+        <path d="M 460 130 L 550 130 L 550 320 L 660 320" class="wire" />
+        <path d="M 460 130 L 550 130 L 550 320 L 660 320" class="wire-animate wire-cmd" id="wire-cmd-2" />
+        
+        <path d="M 730 320 L 860 320 L 860 500 L 900 500" class="wire" />
+        <path d="M 730 320 L 860 320 L 860 500 L 900 500" class="wire-animate wire-cmd" id="wire-cmd-3" />
+
+        <path d="M 900 520 L 820 520 L 820 390 L 730 390" class="wire" />
+        <path d="M 900 520 L 820 520 L 820 390 L 730 390" class="wire-animate wire-feedback active" id="wire-fb-3" />
+        
+        <path d="M 660 390 L 500 390 L 500 190 L 460 190" class="wire" />
+        <path d="M 660 390 L 500 390 L 500 190 L 460 190" class="wire-animate wire-feedback active" id="wire-fb-2" />
+        
+        <path d="M 400 160 L 310 160" class="wire" />
+        <path d="M 400 160 L 310 160" class="wire-animate wire-feedback active" id="wire-fb-1" />
+        
+        <path d="M 250 182 L 250 260" class="wire" />
+        <path d="M 250 182 L 250 260" class="wire-animate wire-feedback active" id="wire-fb-panel" />
+    </g>
+
+    <g id="tracks">
+        <path d="M 780 220 L 1400 220" class="route-glow active" id="route-straight" />
+        <path d="M 780 220 L 950 220 L 1400 130" class="route-glow" id="route-diverging" />
+
+        <path d="M 780 240 L 1400 240" class="rail-fixed" /> <path d="M 780 200 L 950 200 L 1400 110" class="rail-fixed" /> <path d="M 1050 200 L 1400 200" class="rail-fixed" /> <path d="M 1050 220 L 1400 150" class="rail-fixed" /> <g id="frog-crossing">
+            <circle cx="1150" cy="200" r="10" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="3 3"/>
+            <text x="1150" y="175" fill="#fbbf24" font-family="Heebo" font-size="12" font-weight="bold" text-anchor="middle">לב מפלג</text>
+        </g>
+
+        <g id="switch-mechanism">
+            <path d="M 950 200 L 1050 200" class="blade-top" id="top-blade" />
+            
+            <path d="M 950 228 L 1050 220" class="blade-bot" id="bot-blade" />
+            
+            <line x1="950" y1="200" x2="950" y2="228" class="rod-crossbar" />
+        </g>
+    </g>
+
+    <g id="rods">
+        <line x1="945" y1="460" x2="945" y2="200" class="rod rod-det-top" />
+        <line x1="955" y1="460" x2="955" y2="228" class="rod rod-det-bot" />
+    </g>
+
+  </svg>
+
+  <div id="controls-panel">
+    <button id="btn-straight" class="control-btn active-btn" onclick="setRoute('straight')">הצב לישר (שמאל) ◀</button>
+    
+    <div id="caption-text">
+      <div id="caption-title">מסוט נעול - ישר</div>
+      <div id="caption-body">המחט העליונה צמודה והתחתונה פתוחה עם רווח. מסלול הגלגל נקי לנסיעה ישרה.</div>
+    </div>
+    
+    <button id="btn-diverging" class="control-btn" onclick="setRoute('diverging')">הצב לעקלתון (ימין) ▶</button>
+  </div>
+
+  <script>
+    let currentState = 'straight';
+    let seqTimeout;
+
+    function resetWires() {
+        document.querySelectorAll('.wire-animate').forEach(el => {
+            el.style.transition = 'none';
+            el.classList.remove('active');
+            void el.offsetWidth; 
+            el.style.transition = '';
+        });
+        document.querySelectorAll('.box').forEach(el => el.classList.remove('active'));
+    }
+
+    function setRoute(direction) {
+        if (currentState === direction) return;
+        currentState = direction;
+        
+        clearTimeout(seqTimeout);
+        
+        document.getElementById('btn-straight').classList.toggle('active-btn', direction === 'straight');
+        document.getElementById('btn-diverging').classList.toggle('active-btn', direction === 'diverging');
+
+        document.querySelectorAll('.led, .route-glow').forEach(el => el.classList.remove('active'));
+        resetWires();
+
+        document.getElementById('caption-title').innerText = direction === 'straight' ? "מייצב לישר (שמאל)..." : "מייצב לעקלתון (ימין)...";
+        document.getElementById('caption-body').innerText = "אובדן ביקורת: הפיקוד שולח מתח מהאינטרלוקינג למנוע המסוט בשטח.";
+        
+        document.getElementById('box-turnout').classList.add('active');
+        document.getElementById('box-db1').classList.add('active');
+        document.getElementById('box-db2').classList.add('active');
+        
+        document.getElementById('wire-cmd-1').classList.add('active');
+        document.getElementById('wire-cmd-2').classList.add('active');
+        document.getElementById('wire-cmd-3').classList.add('active');
+
+        seqTimeout = setTimeout(() => {
+            document.getElementById('caption-body').innerText = direction === 'straight' ? "המנוע דוחף את המחטים מעלה. העליונה נצמדת, והתחתונה נפתחת לרווח." : "המנוע מושך את המחטים מטה. העליונה נפתחת לרווח אוגן הגלגל, והתחתונה נצמדת.";
+            document.getElementById('box-motor').classList.add('active');
+
+            if (direction === 'diverging') {
+                document.getElementById('switch-mechanism').classList.add('diverging');
+                document.getElementById('rods').classList.add('diverging');
+            } else {
+                document.getElementById('switch-mechanism').classList.remove('diverging');
+                document.getElementById('rods').classList.remove('diverging');
+            }
+
+            setTimeout(() => {
+                document.getElementById('caption-title').innerText = direction === 'straight' ? "מסוט נעול - ישר (שמאל)" : "מסוט נעול - עקלתון (ימין)";
+                document.getElementById('caption-body').innerText = "המחט נצמדה בהצלחה. הביקורת חוזרת לפאנל, והנתיב בטוח ומואר.";
+                
+                document.querySelectorAll('.wire-cmd').forEach(el => el.classList.remove('active'));
+                document.getElementById('wire-fb-3').classList.add('active');
+                document.getElementById('wire-fb-2').classList.add('active');
+                document.getElementById('wire-fb-1').classList.add('active');
+                document.getElementById('wire-fb-panel').classList.add('active');
+
+                setTimeout(() => {
+                    document.getElementById('box-turnout').classList.remove('active');
+                    document.getElementById('box-db1').classList.remove('active');
+                    document.getElementById('box-db2').classList.remove('active');
+                    document.getElementById('box-motor').classList.remove('active');
+
+                    if (direction === 'straight') {
+                        document.getElementById('led-straight').classList.add('active');
+                        document.getElementById('route-straight').classList.add('active');
+                    } else {
+                        document.getElementById('led-diverging').classList.add('active');
+                        document.getElementById('route-diverging').classList.add('active');
+                    }
+                }, 800);
+
+            }, 800); 
+        }, 800); 
+    }
+  </script>
+</body>
+</html>
